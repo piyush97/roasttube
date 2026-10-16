@@ -1,8 +1,11 @@
 import type { RoastReport, ScoreResult, Signals } from "./types.ts";
 import { ROAST_SCHEMA, SAFETY, buildSystemPrompt, buildUserPrompt } from "./prompt.ts";
 
-const ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+// gemini-2.5-flash is retired for new API keys (404). Free-tier quota on the
+// flash family is tiny (~20/day); lite-latest has its own pool, so fall back.
+const MODELS = [process.env.GEMINI_MODEL ?? "gemini-3.5-flash", "gemini-flash-lite-latest"];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function roast(
   s: Signals,
@@ -11,33 +14,40 @@ export async function roast(
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not set");
 
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
-      contents: [
-        { role: "user", parts: [{ text: buildUserPrompt(s, r) }] },
-      ],
-      generationConfig: {
-        temperature: 1.0,
-        responseMimeType: "application/json",
-        responseSchema: ROAST_SCHEMA,
-        safetySettings: SAFETY,
-      },
-    }),
-  });
+  const payload = {
+    systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+    contents: [{ role: "user", parts: [{ text: buildUserPrompt(s, r) }] }],
+    // safetySettings is top-level; inside generationConfig it 400s.
+    safetySettings: SAFETY,
+    generationConfig: {
+      temperature: 1.0,
+      responseMimeType: "application/json",
+      responseSchema: ROAST_SCHEMA,
+    },
+  };
 
-  if (!res.ok) {
-    let msg = "";
-    try {
-      const body = await res.json();
-      msg = body?.error?.message ?? JSON.stringify(body).slice(0, 300);
-    } catch {
-      msg = await res.text().then((t) => t.slice(0, 300));
+  let res!: Response; // assigned on first loop iteration
+  let lastErr = "";
+  for (const model of MODELS) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) break;
+      lastErr = `Gemini ${model} ${res.status}: ${(await res.text()).slice(0, 200)}`;
+      // 429/503 = quota or capacity; retry once, then try next model.
+      if (res.status === 429 || res.status === 503) {
+        if (attempt === 0) await sleep(1500);
+        continue;
+      }
+      throw new Error(lastErr); // 4xx other than quota: no point retrying
     }
-    throw new Error(`Gemini API ${res.status}: ${msg}`);
+    if (res.ok) break;
   }
+  if (!res.ok) throw new Error(lastErr || "Gemini request failed");
 
   const data = await res.json();
   const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
