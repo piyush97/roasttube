@@ -2,6 +2,15 @@
   "name": "roasttube",
   "version": "0.1.0",
   "private": true,
+  "description": "Sign in with Google, read your YouTube likes/subs/playlists, compute hard stats, and let Gemini write a brutal tabloid roast with a Brain Rot Score.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piyush97/roasttube.git"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
