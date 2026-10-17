@@ -71,7 +71,16 @@ export async function exchangeCode(code: string, verifier: string): Promise<{
 }
 
 // In-memory only: token lives until it expires or logout; never persisted to disk.
-const sessions = new Map<string, { token: string; expiresAt: number }>();
+// Stored on globalThis: Next compiles pages and route handlers as separate
+// module instances, so a plain module-level Map is NOT shared between the
+// OAuth callback (route handler) and the page render that reads it.
+type Session = { token: string; expiresAt: number };
+const globalSessions = globalThis as unknown as {
+  __roasttubeSessions?: Map<string, Session>;
+};
+const sessions: Map<string, Session> =
+  globalSessions.__roasttubeSessions ??
+  (globalSessions.__roasttubeSessions = new Map());
 
 export function putSession(id: string, token: string, expiresAt: number) {
   // prune expired sessions so the Map can't grow unbounded

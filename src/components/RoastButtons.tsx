@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const PERSONAS = [
@@ -89,8 +89,13 @@ export function RoastButtons({
   }
 
   // Landed via /?run=1 straight after Google login — start the roast, don't wait for a click.
+  const autoRan = useRef(false);
   useEffect(() => {
-    if (autoRunYouTube && signedIn && geminiKey) runYouTube();
+    if (!autoRunYouTube) return;
+    window.history.replaceState(null, "", "/"); // strip ?run=1 so a refresh doesn't re-roast
+    if (autoRan.current || !signedIn || !geminiKey) return;
+    autoRan.current = true; // StrictMode double-invoke guard — one roast per login
+    runYouTube();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
