@@ -121,9 +121,9 @@ export default function Privacy() {
             To delete a stored roast, email its case number to{" "}
             <a
               className="underline decoration-1 underline-offset-2"
-              href="mailto:me@piyushmehta.com"
+              href="mailto:contact@piyushmehta.com"
             >
-              me@piyushmehta.com
+              contact@piyushmehta.com
             </a>
             .
           </li>
@@ -140,9 +140,9 @@ export default function Privacy() {
           Questions, deletions, or objections to the verdict:{" "}
           <a
             className="underline decoration-1 underline-offset-2"
-            href="mailto:me@piyushmehta.com"
+            href="mailto:contact@piyushmehta.com"
           >
-            me@piyushmehta.com
+            contact@piyushmehta.com
           </a>
           .
         </p>

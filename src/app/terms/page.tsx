@@ -74,9 +74,9 @@ export default function Terms() {
           Objections, corrections, or appeals:{" "}
           <a
             className="underline decoration-1 underline-offset-2"
-            href="mailto:me@piyushmehta.com"
+            href="mailto:contact@piyushmehta.com"
           >
-            me@piyushmehta.com
+            contact@piyushmehta.com
           </a>
           .
         </p>
