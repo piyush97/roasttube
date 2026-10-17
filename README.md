@@ -1,4 +1,6 @@
-<p align="center"><img src="docs/screenshots/home.png" alt="RoastTube front page: a tabloid masthead reading WE READ YOUR LIKES. WE DID THE MATH." width="720"></p>
+<p align="center"><a href="brag-output/brag.mp4"><img src="brag-output/brag.jpg" alt="Watch the 21-second RoastTube launch video: a demo verdict with a Brain Rot Score of 29 and a Mildly Concerning stamp" width="960"></a></p>
+
+<p align="center"><a href="brag-output/brag.mp4">Watch the launch video — 21 seconds, 1080p, music + sound effects</a></p>
 
 # RoastTube
 
