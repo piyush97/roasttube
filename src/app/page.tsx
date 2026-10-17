@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import {
   SESSION_COOKIE,
   openSession,
@@ -87,6 +88,15 @@ export default async function Home({
         <p className="dateline mt-3 text-center">
           RoastTube — entertainment, barely. Roasts are stored so links keep
           working; sign-in tokens are dropped once the evidence is collected.
+        </p>
+        <p className="dateline mt-2 text-center">
+          <Link className="underline" href="/privacy">
+            Privacy
+          </Link>
+          {" · "}
+          <Link className="underline" href="/terms">
+            Terms
+          </Link>
         </p>
       </footer>
     </main>

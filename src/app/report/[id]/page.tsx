@@ -120,6 +120,15 @@ export default async function ReportPage({
           Case no. {stored.id} — filed {new Date(stored.createdAt).toUTCString()}
           {stored.source === "demo" ? " · fabricated defendant, real math" : ""}
         </p>
+        <p className="dateline mt-2 text-center">
+          <Link className="underline" href="/privacy">
+            Privacy
+          </Link>
+          {" · "}
+          <Link className="underline" href="/terms">
+            Terms
+          </Link>
+        </p>
       </footer>
     </main>
   );
