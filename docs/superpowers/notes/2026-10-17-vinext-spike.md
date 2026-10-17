@@ -42,3 +42,5 @@ Observations:
 ## Full battery at the time of writing (probes still present, since removed)
 
 - `npm test` 58/58 · `npx tsc --noEmit` exit 0 (after `rm -rf .next`) · `npm run lint` exit 0 · `npm run build` exit 0 · `npm run build:vinext` exit 0.
+
+Update (Task 2): with `cacheComponents`/`partialPrefetching` removed and the turbopack CSS rule gone, `vinext check` stays clean except one partial — the `turbopack` key itself, kept for the `root` pin that `next dev` needs (Vite ignores it). `next build` after the removal shows `ƒ /` and `ƒ /report/[id]`, both dynamic.

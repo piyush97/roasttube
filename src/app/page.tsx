@@ -1,4 +1,3 @@
-import { connection } from "next/server";
 import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
@@ -7,15 +6,11 @@ import {
 } from "@/lib/oauth";
 import { RoastButtons } from "@/components/RoastButtons";
 
-// Dateline shows today's date; render per request instead of at build.
-export const instant = false;
-
 export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; run?: string }>;
 }) {
-  await connection(); // dateline is today's date — render per request, not at build
   const { error, run } = await searchParams;
   const jar = await cookies();
   const signedIn = Boolean(getSession(jar.get(SESSION_COOKIE)?.value ?? ""));

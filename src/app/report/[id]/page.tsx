@@ -7,9 +7,6 @@ import { RedFlagCard } from "@/components/RedFlagCard";
 import { ChannelRoasts } from "@/components/ChannelRoasts";
 import { ShareCard } from "@/components/ShareCard";
 
-// Reads a JSON file from disk per request; nothing to prerender.
-export const instant = false;
-
 export default async function ReportPage({
   params,
 }: {
