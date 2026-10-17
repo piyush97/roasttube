@@ -54,6 +54,6 @@ The app stays in Google OAuth **Testing** mode: expect the unverified-app warnin
 ## Tests
 
 ```bash
-npm test        # node --test, 55 tests
+npm test        # node --test, 50 tests
 npx tsc --noEmit
 ```
