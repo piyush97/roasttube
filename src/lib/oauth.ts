@@ -38,8 +38,9 @@ export function buildAuthUrl(state: string, challenge: string): string {
   u.searchParams.set("state", state);
   u.searchParams.set("code_challenge", challenge);
   u.searchParams.set("code_challenge_method", "S256");
-  u.searchParams.set("access_type", "offline");
-  u.searchParams.set("prompt", "consent");
+  // No prompt=consent and no access_type=offline: we never keep refresh
+  // tokens, and asking for consent on every sign-in would re-show the
+  // consent screen (with its unverified-app warning) for no reason.
   return u.toString();
 }
 
