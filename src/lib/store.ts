@@ -1,24 +1,20 @@
-import { randomBytes } from "node:crypto";
-import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+// Report storage selector: Cloudflare KV when the ROASTTUBE_KV binding exists
+// (deployed Workers / vite dev), the local filesystem everywhere else
+// (next dev, node tests). Public API is unchanged for existing callers.
 import type { RoastReport, ScoreResult, Signals, StoredReport } from "./types.ts";
+import { getKvBinding } from "./kv.ts";
+import { createKvStore } from "./store-kv.ts";
+import * as fsStore from "./store-fs.ts";
 
-const DIR = join(process.cwd(), "data", "reports");
+type ReportStore = ReturnType<typeof createKvStore>;
 
-const ID_RE = /^[a-z0-9]{8}$/;
+let kvStore: ReportStore | null = null;
 
-const ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
-
-function newId(): string {
-  // crypto, not Math.random: report IDs guard private roast data
-  const b = randomBytes(8);
-  let s = "";
-  for (let i = 0; i < 8; i++) s += ID_ALPHABET[b[i] % 36];
-  return s;
-}
-
-async function ensureDir() {
-  await mkdir(DIR, { recursive: true });
+async function store(): Promise<ReportStore> {
+  const kv = await getKvBinding();
+  if (!kv) return fsStore;
+  kvStore ??= createKvStore(kv);
+  return kvStore;
 }
 
 export async function saveReport(
@@ -28,71 +24,17 @@ export async function saveReport(
   source: StoredReport["source"],
   persona?: string
 ): Promise<string> {
-  await ensureDir();
-  const stored: Omit<StoredReport, "id"> = {
-    createdAt: new Date().toISOString(),
-    source,
-    persona,
-    report,
-    signals,
-    score,
-  };
-  // wx = create-exclusive: closes the read-then-write collision race
-  for (let i = 0; i < 5; i++) {
-    const id = newId();
-    try {
-      await writeFile(join(DIR, `${id}.json`), JSON.stringify({ id, ...stored }, null, 2), {
-        flag: "wx",
-      });
-      return id;
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
-    }
-  }
-  throw new Error("could not allocate report id");
+  return (await store()).saveReport(report, signals, score, source, persona);
 }
 
 export async function getReport(id: string): Promise<StoredReport | null> {
-  if (!ID_RE.test(id)) return null;
-  try {
-    return JSON.parse(await readFile(join(DIR, `${id}.json`), "utf8"));
-  } catch {
-    return null;
-  }
+  return (await store()).getReport(id);
 }
 
 export async function listReports(limit = 20): Promise<StoredReport[]> {
-  let files: string[];
-  try {
-    files = await readdir(DIR);
-  } catch {
-    return [];
-  }
-  const reports = await Promise.all(
-    files
-      .filter((f) => f.endsWith(".json"))
-      .map(async (f) => {
-        try {
-          return JSON.parse(
-            await readFile(join(DIR, f), "utf8")
-          ) as StoredReport;
-        } catch {
-          return null;
-        }
-      })
-  );
-  return reports
-    .filter((r): r is StoredReport => r !== null)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, limit);
+  return (await store()).listReports(limit);
 }
 
 export async function deleteReport(id: string): Promise<boolean> {
-  if (!ID_RE.test(id)) return false;
-  try {
-    await unlink(join(DIR, `${id}.json`));
-    return true;
-  } catch {
-    return false;
-  }
+  return (await store()).deleteReport(id);
 }
