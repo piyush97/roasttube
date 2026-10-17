@@ -17,16 +17,37 @@ import {
 import { verifyTurnstile } from "@/lib/turnstile";
 import { SESSION_COOKIE, openSession } from "@/lib/oauth";
 
+// collect() wraps upstream failures as `YouTube API <status> (<reason>): ...`
+// (youtube.ts): recover the numeric status for structured logs, and treat a
+// 401 as a rejected/expired token even though the sealed session was valid.
+function youtubeUpstreamStatus(e: unknown): number | null {
+  if (!(e instanceof Error)) return null;
+  const m = /^YouTube API (\d{3})\b/.exec(e.message);
+  return m ? Number(m[1]) : null;
+}
+
+// gemini.ts throws `Gemini <model> <status>: ...` for non-OK responses.
+function geminiUpstreamStatus(e: unknown): number | null {
+  if (!(e instanceof Error)) return null;
+  const m = /^Gemini \S+ (\d{3}):/.exec(e.message);
+  return m ? Number(m[1]) : null;
+}
+
 // Admission order: rate limit → parse → (demo: Turnstile → cache) →
 // (youtube: session) → daily budget → collect → generate. Cache hits are free;
 // admitted-but-failed generations keep their budget unit (soft limit).
+// Rejection/success logs are structured and carry no PII: no titles, ids,
+// IPs, tokens, or upstream response text.
 export async function POST(req: NextRequest) {
+  const startedAt = Date.now();
   const ip =
     req.headers.get("cf-connecting-ip") ??
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "local";
   const kv = await getKv();
   if (await ipRateLimited(kv, ip, Date.now())) {
+    // Pre-parse by design, so the source is not known at this point.
+    console.warn({ evt: "reject", code: "rate_limited", source: "unknown" });
     return NextResponse.json(
       { error: "rate_limited", message: "3 roasts per hour. Breathe. Try again later." },
       { status: 429 }
@@ -57,6 +78,7 @@ export async function POST(req: NextRequest) {
       remoteIp: ip,
     });
     if (!human) {
+      console.warn({ evt: "reject", code: "turnstile_failed", source: "demo" });
       return NextResponse.json(
         { error: "turnstile_failed", message: "Bot check failed. Reload the page and try again." },
         { status: 403 }
@@ -66,6 +88,12 @@ export async function POST(req: NextRequest) {
     if (cachedId) {
       const stored = await getReport(cachedId);
       if (stored) {
+        console.log({
+          evt: "roast",
+          source: "demo",
+          outcome: "ok",
+          ms: Date.now() - startedAt,
+        });
         return NextResponse.json({
           id: stored.id,
           report: stored.report,
@@ -94,6 +122,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!(await consumeBudget(kv, Date.now(), dailyBudgetCap()))) {
+    console.warn({ evt: "reject", code: "budget_exhausted", source: body.source });
     return NextResponse.json(
       {
         error: "budget_exhausted",
@@ -115,11 +144,35 @@ export async function POST(req: NextRequest) {
     try {
       collected = await collect(youtubeToken!);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
       if (e instanceof QuotaError) {
-        return NextResponse.json({ error: "quota_exhausted", message: msg }, { status: 429 });
+        console.warn({ evt: "reject", code: "quota_exhausted", source: "youtube" });
+        return NextResponse.json({ error: "quota_exhausted", message: e.message }, { status: 429 });
       }
-      return NextResponse.json({ error: "youtube_failed", message: msg }, { status: 502 });
+      const status = youtubeUpstreamStatus(e);
+      if (status === 401) {
+        // The sealed session was still valid; Google rejected the token.
+        console.warn({ evt: "reject", code: "reauth", source: "youtube", status });
+        return NextResponse.json(
+          {
+            error: "reauth",
+            message: "Your Google session went stale. Sign in again and the court will resume.",
+          },
+          { status: 401 }
+        );
+      }
+      console.warn({
+        evt: "reject",
+        code: "youtube_failed",
+        source: "youtube",
+        ...(status !== null ? { status } : {}),
+      });
+      return NextResponse.json(
+        {
+          error: "youtube_failed",
+          message: "YouTube did not answer for your account. Try again in a minute.",
+        },
+        { status: 502 }
+      );
     }
     source = "youtube";
   }
@@ -136,9 +189,20 @@ export async function POST(req: NextRequest) {
   try {
     report = await roast(signals, score);
   } catch (e) {
+    const status = geminiUpstreamStatus(e);
+    console.warn({
+      evt: "reject",
+      code: "gemini_failed",
+      source,
+      ...(status !== null ? { status } : {}),
+    });
     return NextResponse.json(
-      { error: "gemini_failed", message: e instanceof Error ? e.message : String(e) },
-      { status: 502 }
+      {
+        error: "gemini_failed",
+        message:
+          "The roast engine is oversubscribed right now. Give it a minute and demand a retrial.",
+      },
+      { status: 503 }
     );
   }
 
@@ -146,5 +210,6 @@ export async function POST(req: NextRequest) {
   if (source === "demo" && persona) {
     await cacheDemoReportId(kv, persona, id);
   }
+  console.log({ evt: "roast", source, outcome: "ok", ms: Date.now() - startedAt });
   return NextResponse.json({ id, report, signals, score, persona });
 }
