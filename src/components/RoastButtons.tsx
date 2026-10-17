@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/TurnstileWidget";
 
 const PERSONAS = [
   {
@@ -29,13 +30,16 @@ export function RoastButtons({
   geminiKey,
   signedIn,
   autoRunYouTube,
+  turnstileSiteKey,
 }: {
   oauthConfigured: boolean;
   geminiKey: boolean;
   signedIn: boolean;
   autoRunYouTube: boolean;
+  turnstileSiteKey?: string;
 }) {
   const router = useRouter();
+  const turnstile = useRef<TurnstileHandle>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,10 +47,18 @@ export function RoastButtons({
     setBusy(persona);
     setError(null);
     try {
+      // A fresh single-use token per request; the server verifies when configured.
+      const turnstileToken = turnstileSiteKey
+        ? ((await turnstile.current?.execute()) ?? undefined)
+        : undefined;
       const res = await fetch("/api/roast", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ source: "demo", persona }),
+        body: JSON.stringify({
+          source: "demo",
+          persona,
+          ...(turnstileToken ? { turnstileToken } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -186,6 +198,8 @@ export function RoastButtons({
           {error}
         </p>
       )}
+
+      <TurnstileWidget ref={turnstile} siteKey={turnstileSiteKey} />
     </div>
   );
 }

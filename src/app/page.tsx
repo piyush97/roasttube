@@ -79,6 +79,7 @@ export default async function Home({
         geminiKey={geminiKey}
         signedIn={signedIn}
         autoRunYouTube={run === "1"}
+        turnstileSiteKey={process.env.TURNSTILE_SITE_KEY}
       />
 
       <footer className="mt-14">
