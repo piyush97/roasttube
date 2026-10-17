@@ -1,0 +1,95 @@
+{
+  "candidate": "gemini-3.5-flash",
+  "model": "gemini-3.5-flash",
+  "label": "Gemini 3.5 Flash (current)",
+  "persona": "lurker",
+  "stamp": "2026-10-17T20:40:16.860Z",
+  "durationMs": 5259,
+  "call": {
+    "path": "gemini-generateContent",
+    "ok": true,
+    "error": null
+  },
+  "parsed": true,
+  "parseNote": null,
+  "analysis": {
+    "parsed": true,
+    "present": {
+      "headline": true,
+      "roastReport": true,
+      "redFlags": 5,
+      "channelRoasts": 5,
+      "personality": true,
+      "existentialQuestion": true,
+      "shareCardLine": true
+    },
+    "chars": {
+      "roastReport": 1811,
+      "headline": 60,
+      "total": 2794
+    },
+    "paragraphs": 4,
+    "emEnDashes": {
+      "raw": 0,
+      "afterStrip": 0
+    },
+    "shareCardChars": 67,
+    "modelScore": 29,
+    "modelTier": "Mildly Concerning",
+    "leaks": {
+      "literalParagraphLabels": false,
+      "markdownFencesInText": false,
+      "bannedPhraseHit": false
+    }
+  },
+  "rawText": "{\n  \"headline\": \"You have downloaded Notion 40 times and accomplished nothing\",\n  \"roastReport\": \"Your entire digital footprint is a monument to wanting to want things. You have liked 11 videos total, with a topic entropy of 1.00, meaning you treat self-help channels like a menu where you read the descriptions and leave without ordering. You spent 26 minutes watching \\\"Notion setup for your entire life\\\" while your actual life rots in a Watch Later folder containing 212 videos you will never open. You consume wellness and productivity content with the desperate fury of a man who thinks changing his desktop background counts as a lifestyle overhaul.\\n\\nThen we get to the hypocrisy. You love minimalism videos like \\\"Digital detox: I deleted everything\\\" yet you somehow accumulated a techHaul video alongside your nine self-improvement bookmarks. You want the aesthetic purity of a monk combined with the consumerist dopamine of unboxing gadget accessories. You like \\\"How to focus for 4 hours straight\\\" and \\\"I quit dopamine for 30 days\\\" as if clicking a thumbs up button on YouTube transfers discipline directly into your nervous system by osmosis.\\n\\nYour playlist titles read like a cry for help from a ghost. You have folders called \\\"Self Improvement Central,\\\" \\\"Podcasts I'll get to,\\\" and \\\"Gym motivation\\\" sitting there collecting dust while your lurker index sits at an embarrassing 27.273. You do not comment, you do not engage, you just hoard motivational porn to soothe the anxiety of being entirely useless. You are waiting for the patch notes for your personality to drop.\\n\\nWake up. You watched \\\"My 5am morning routine that changed everything\\\" and \\\"Why you're always tired\\\" back to back, which is the exact diagnostic profile of someone who stays up until 3 am browsing color-coded calendar apps. You are addicted to the feeling of potential because actual execution requires turning the monitor off.\",\n  \"brainrotScore\": 29,\n  \"brainrotTier\": \"Mildly Concerning\",\n  \"redFlags\": [\n    \"9 self-improvement videos liked and zero real life application\",\n    \"212 rotting items trapped inside the Watch Later graveyard\",\n    \"Preaches minimalism while hoarding tech haul videos\",\n    \"Playlists named Podcasts I'll get to that you will never touch\",\n    \"Zero likes in the last 7 days because you stopped pretending\"\n  ],\n  \"personality\": \"A chronic planner who treats productivity content as a substitute for achievement. You collect aesthetic digital containers to hide the empty rooms inside.\",\n  \"existentialQuestion\": \"Will you ever build the Notion setup, or will you just watch another video about it until you die?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Daily Discipline\",\n      \"roast\": \"You gave them one like and zero days of actual discipline.\"\n    },\n    {\n      \"channel\": \"Deep Work Daily\",\n      \"roast\": \"Shallow viewing habits for a deep work channel.\"\n    },\n    {\n      \"channel\": \"Monk Mode Mike\",\n      \"roast\": \"You want the monk aesthetic without turning off your Wi-Fi.\"\n    },\n    {\n      \"channel\": \"Porch Philosophy\",\n      \"roast\": \"You sit on your porch watching people talk about thinking.\"\n    },\n    {\n      \"channel\": \"Wellness Wire\",\n      \"roast\": \"Wired into wellness content while your posture turns into a question mark.\"\n    }\n  ],\n  \"shareCardLine\": \"I watched a 26 minute Notion video and my life is still a disaster.\"\n}",
+  "rawResponse": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "{\n  \"headline\": \"You have downloaded Notion 40 times and accomplished nothing\",\n  \"roastReport\": \"Your entire digital footprint is a monument to wanting to want things. You have liked 11 videos total, with a topic entropy of 1.00, meaning you treat self-help channels like a menu where you read the descriptions and leave without ordering. You spent 26 minutes watching \\\"Notion setup for your entire life\\\" while your actual life rots in a Watch Later folder containing 212 videos you will never open. You consume wellness and productivity content with the desperate fury of a man who thinks changing his desktop background counts as a lifestyle overhaul.\\n\\nThen we get to the hypocrisy. You love minimalism videos like \\\"Digital detox: I deleted everything\\\" yet you somehow accumulated a techHaul video alongside your nine self-improvement bookmarks. You want the aesthetic purity of a monk combined with the consumerist dopamine of unboxing gadget accessories. You like \\\"How to focus for 4 hours straight\\\" and \\\"I quit dopamine for 30 days\\\" as if clicking a thumbs up button on YouTube transfers discipline directly into your nervous system by osmosis.\\n\\nYour playlist titles read like a cry for help from a ghost. You have folders called \\\"Self Improvement Central,\\\" \\\"Podcasts I'll get to,\\\" and \\\"Gym motivation\\\" sitting there collecting dust while your lurker index sits at an embarrassing 27.273. You do not comment, you do not engage, you just hoard motivational porn to soothe the anxiety of being entirely useless. You are waiting for the patch notes for your personality to drop.\\n\\nWake up. You watched \\\"My 5am morning routine that changed everything\\\" and \\\"Why you're always tired\\\" back to back, which is the exact diagnostic profile of someone who stays up until 3 am browsing color-coded calendar apps. You are addicted to the feeling of potential because actual execution requires turning the monitor off.\",\n  \"brainrotScore\": 29,\n  \"brainrotTier\": \"Mildly Concerning\",\n  \"redFlags\": [\n    \"9 self-improvement videos liked and zero real life application\",\n    \"212 rotting items trapped inside the Watch Later graveyard\",\n    \"Preaches minimalism while hoarding tech haul videos\",\n    \"Playlists named Podcasts I'll get to that you will never touch\",\n    \"Zero likes in the last 7 days because you stopped pretending\"\n  ],\n  \"personality\": \"A chronic planner who treats productivity content as a substitute for achievement. You collect aesthetic digital containers to hide the empty rooms inside.\",\n  \"existentialQuestion\": \"Will you ever build the Notion setup, or will you just watch another video about it until you die?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Daily Discipline\",\n      \"roast\": \"You gave them one like and zero days of actual discipline.\"\n    },\n    {\n      \"channel\": \"Deep Work Daily\",\n      \"roast\": \"Shallow viewing habits for a deep work channel.\"\n    },\n    {\n      \"channel\": \"Monk Mode Mike\",\n      \"roast\": \"You want the monk aesthetic without turning off your Wi-Fi.\"\n    },\n    {\n      \"channel\": \"Porch Philosophy\",\n      \"roast\": \"You sit on your porch watching people talk about thinking.\"\n    },\n    {\n      \"channel\": \"Wellness Wire\",\n      \"roast\": \"Wired into wellness content while your posture turns into a question mark.\"\n    }\n  ],\n  \"shareCardLine\": \"I watched a 26 minute Notion video and my life is still a disaster.\"\n}",
+              "thoughtSignature": "EmAKXgFpFH0TTLMRizC6IWCggYgjkCfqKjnaDdzyCE2Qjq72lm//r7xcOOeqiz/mt3R5DU31aKxfBvYRG6aRJusalFd7SqzofDX9y6ofAi0stpxQ1sKYL+GcdzZ4mZGHSmo="
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0,
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE"
+          }
+        ]
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 1054,
+      "candidatesTokenCount": 794,
+      "totalTokenCount": 1848,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 1054
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash-lite",
+    "responseId": "M93Tav7yB8fK_PUP4f7nqAc"
+  }
+}

@@ -19,7 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RoastTube — Your YouTube Taste, On The Record",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://roasttube.piyushmehta.com",
+  ),
+  title: "RoastTube: Your YouTube Taste, On The Record",
   description:
     "We read your likes. We did the math. A court of one jury of one found you guilty.",
 };
@@ -30,12 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${anton.variable} ${sourceSerif.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html
+      lang="en"
+      className={`${anton.variable} ${sourceSerif.variable} ${geistMono.variable}`}
+    >
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

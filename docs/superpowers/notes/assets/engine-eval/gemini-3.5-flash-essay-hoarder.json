@@ -1,0 +1,95 @@
+{
+  "candidate": "gemini-3.5-flash",
+  "model": "gemini-3.5-flash",
+  "label": "Gemini 3.5 Flash (current)",
+  "persona": "essay-hoarder",
+  "stamp": "2026-10-17T20:40:16.860Z",
+  "durationMs": 5019,
+  "call": {
+    "path": "gemini-generateContent",
+    "ok": true,
+    "error": null
+  },
+  "parsed": true,
+  "parseNote": null,
+  "analysis": {
+    "parsed": true,
+    "present": {
+      "headline": true,
+      "roastReport": true,
+      "redFlags": 5,
+      "channelRoasts": 5,
+      "personality": true,
+      "existentialQuestion": true,
+      "shareCardLine": true
+    },
+    "chars": {
+      "roastReport": 1555,
+      "headline": 71,
+      "total": 2667
+    },
+    "paragraphs": 4,
+    "emEnDashes": {
+      "raw": 0,
+      "afterStrip": 0
+    },
+    "shareCardChars": 95,
+    "modelScore": 15,
+    "modelTier": "Well Adjusted",
+    "leaks": {
+      "literalParagraphLabels": false,
+      "markdownFencesInText": false,
+      "bannedPhraseHit": false
+    }
+  },
+  "rawText": "{\n  \"headline\": \"You bought three monitors to watch a video about owning twelve objects.\",\n  \"roastReport\": \"You possess twelve liked videos in total and treat the platform like a curated museum exhibit of your own hypocrisy. The mix of Gadget Goblin tech hauls and Empty Room minimalism tours proves you want the aesthetic of Buddhist monk detachment while clicking buy on another flagship phone. Watching a four hour video essay on the history of cinema does not make you a film critic. It just means you had four hours where you refused to look at the walls.\\n\\nYour playlist titles include video essays you never finish and tech hauls you use to research purchases you will definitely make at three in the morning. You watched a digital detox video and then liked another MacBook Pro unboxing. You claim you want a capsule wardrobe and zero clutter, yet your Watch Later folder holds forty seven unwatched items accumulating digital dust. You are just a consumer with a thesaurus.\\n\\nZero self improvement videos were liked, which matches your complete lack of actual change. You use ten minute keyboard setup tours as a substitute for typing a single useful sentence. Buying camera gear and desk setups that make you productive is your hobby, not the productivity itself. You spend forty two minutes on average watching people unpack boxes of plastic you never intend to touch.\\n\\nEvery single click you make is an alibi for your inability to sit quietly in an unfurnished room. You pretend to love slow cinema while needing a gadget in your hand to survive a ninety minute essay. Your taste profile is a cry for help from a desk that costs more than your mattress.\",\n  \"brainrotScore\": 15,\n  \"brainrotTier\": \"Well Adjusted\",\n  \"redFlags\": [\n    \"Liked twelve videos total and treats three of them as a personal philosophy.\",\n    \"Saved forty seven videos to Watch Later just to ignore them.\",\n    \"Liked a minimalism tour right after a massive tech haul.\",\n    \"Watches four hour video essays about cinema instead of leaving the house.\",\n    \"Calls buying a keyboard a digital detox.\"\n  ],\n  \"personality\": \"A chronic consumer who mistakes buying storage bins for actual organization. You treat minimalism as a shopping category and hoard video essays to feel studious while accomplishing nothing.\",\n  \"existentialQuestion\": \"Which desk setup tour will finally make you like yourself?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Empty Room\",\n      \"roast\": \"You watch this to pretend you own nothing while your closet overflows with Gadget Goblin boxes.\"\n    },\n    {\n      \"channel\": \"Gadget Goblin\",\n      \"roast\": \"Your primary source of financial ruin disguised as productivity research.\"\n    },\n    {\n      \"channel\": \"KurosawaLong\",\n      \"roast\": \"You put this on in the background so you can tell people you watch slow cinema.\"\n    },\n    {\n      \"channel\": \"Frame by Frame\",\n      \"roast\": \"Four hours of film analysis to justify staring at screens all day.\"\n    },\n    {\n      \"channel\": \"Keyboard Karen\",\n      \"roast\": \"You spend money on clicky plastic toys to avoid writing your novel.\"\n    }\n  ],\n  \"shareCardLine\": \"My entire personality is based on a minimalism tour I watched while buying another MacBook Pro.\"\n}",
+  "rawResponse": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "{\n  \"headline\": \"You bought three monitors to watch a video about owning twelve objects.\",\n  \"roastReport\": \"You possess twelve liked videos in total and treat the platform like a curated museum exhibit of your own hypocrisy. The mix of Gadget Goblin tech hauls and Empty Room minimalism tours proves you want the aesthetic of Buddhist monk detachment while clicking buy on another flagship phone. Watching a four hour video essay on the history of cinema does not make you a film critic. It just means you had four hours where you refused to look at the walls.\\n\\nYour playlist titles include video essays you never finish and tech hauls you use to research purchases you will definitely make at three in the morning. You watched a digital detox video and then liked another MacBook Pro unboxing. You claim you want a capsule wardrobe and zero clutter, yet your Watch Later folder holds forty seven unwatched items accumulating digital dust. You are just a consumer with a thesaurus.\\n\\nZero self improvement videos were liked, which matches your complete lack of actual change. You use ten minute keyboard setup tours as a substitute for typing a single useful sentence. Buying camera gear and desk setups that make you productive is your hobby, not the productivity itself. You spend forty two minutes on average watching people unpack boxes of plastic you never intend to touch.\\n\\nEvery single click you make is an alibi for your inability to sit quietly in an unfurnished room. You pretend to love slow cinema while needing a gadget in your hand to survive a ninety minute essay. Your taste profile is a cry for help from a desk that costs more than your mattress.\",\n  \"brainrotScore\": 15,\n  \"brainrotTier\": \"Well Adjusted\",\n  \"redFlags\": [\n    \"Liked twelve videos total and treats three of them as a personal philosophy.\",\n    \"Saved forty seven videos to Watch Later just to ignore them.\",\n    \"Liked a minimalism tour right after a massive tech haul.\",\n    \"Watches four hour video essays about cinema instead of leaving the house.\",\n    \"Calls buying a keyboard a digital detox.\"\n  ],\n  \"personality\": \"A chronic consumer who mistakes buying storage bins for actual organization. You treat minimalism as a shopping category and hoard video essays to feel studious while accomplishing nothing.\",\n  \"existentialQuestion\": \"Which desk setup tour will finally make you like yourself?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Empty Room\",\n      \"roast\": \"You watch this to pretend you own nothing while your closet overflows with Gadget Goblin boxes.\"\n    },\n    {\n      \"channel\": \"Gadget Goblin\",\n      \"roast\": \"Your primary source of financial ruin disguised as productivity research.\"\n    },\n    {\n      \"channel\": \"KurosawaLong\",\n      \"roast\": \"You put this on in the background so you can tell people you watch slow cinema.\"\n    },\n    {\n      \"channel\": \"Frame by Frame\",\n      \"roast\": \"Four hours of film analysis to justify staring at screens all day.\"\n    },\n    {\n      \"channel\": \"Keyboard Karen\",\n      \"roast\": \"You spend money on clicky plastic toys to avoid writing your novel.\"\n    }\n  ],\n  \"shareCardLine\": \"My entire personality is based on a minimalism tour I watched while buying another MacBook Pro.\"\n}",
+              "thoughtSignature": "EmAKXgFpFH0TQANtvsJrQDW/MXA14lZR+DFgN0yR/cTf6Ssqpw8QOXI9gE9xo5ZkYWtO03WdOze1M0Eu/6gB/DIsViClw4h4PdKu7dy3fyv7fEH5eqIbJiG2KfitoM958F8="
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0,
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "LOW"
+          },
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE"
+          }
+        ]
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 1077,
+      "candidatesTokenCount": 721,
+      "totalTokenCount": 1798,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 1077
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash-lite",
+    "responseId": "Pd3TavCSEqPO_uMP0_De2Ag"
+  }
+}

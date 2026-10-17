@@ -1,0 +1,95 @@
+{
+  "stamp": "2026-10-17T20:40:37.135Z",
+  "results": [
+    {
+      "candidate": "workers-gpt-oss-120b",
+      "persona": "lurker",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 14606,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-gpt-oss-120b-lurker.json"
+    },
+    {
+      "candidate": "workers-qwen3-30b-a3b-fp8",
+      "persona": "lurker",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 5954,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-qwen3-30b-a3b-fp8-lurker.json"
+    },
+    {
+      "candidate": "workers-glm-4.7-flash",
+      "persona": "lurker",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 33964,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-glm-4.7-flash-lurker.json"
+    },
+    {
+      "candidate": "workers-gpt-oss-120b",
+      "persona": "gremlin",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 20749,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-gpt-oss-120b-gremlin.json"
+    },
+    {
+      "candidate": "workers-qwen3-30b-a3b-fp8",
+      "persona": "gremlin",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 7367,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-qwen3-30b-a3b-fp8-gremlin.json"
+    },
+    {
+      "candidate": "workers-glm-4.7-flash",
+      "persona": "gremlin",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 31198,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-glm-4.7-flash-gremlin.json"
+    },
+    {
+      "candidate": "workers-gpt-oss-120b",
+      "persona": "essay-hoarder",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 16830,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-gpt-oss-120b-essay-hoarder.json"
+    },
+    {
+      "candidate": "workers-qwen3-30b-a3b-fp8",
+      "persona": "essay-hoarder",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 6982,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-qwen3-30b-a3b-fp8-essay-hoarder.json"
+    },
+    {
+      "candidate": "workers-glm-4.7-flash",
+      "persona": "essay-hoarder",
+      "parsed": false,
+      "errorKind": "parse",
+      "durationMs": 41193,
+      "chars": 0,
+      "dashes": null,
+      "file": "docs/superpowers/notes/assets/engine-eval/workers-glm-4.7-flash-essay-hoarder.json"
+    }
+  ]
+}

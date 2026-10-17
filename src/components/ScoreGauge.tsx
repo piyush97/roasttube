@@ -44,9 +44,18 @@ export function ScoreGauge({
             />
           );
         })}
+        {/* transform-box: fill-box resolves the rotation origin against the
+            needle's own geometry in every engine (view-box pixel origins on SVG
+            CSS transforms are mis-resolved by Safari). The needle is drawn from
+            the hub at (100,100) straight up, so the bottom-center of its object
+            bounding box is exactly the hub: the needle pivots on the dial center. */}
         <g
           className="needle"
-          style={{ ["--needle-angle" as string]: `${angle}deg` }}
+          style={{
+            ["--needle-angle" as string]: `${angle}deg`,
+            transformBox: "fill-box",
+            transformOrigin: "50% 100%",
+          }}
         >
           <line
             x1={100}
