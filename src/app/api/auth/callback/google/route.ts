@@ -5,8 +5,7 @@ import {
   SESSION_COOKIE,
   cookieSecure,
   exchangeCode,
-  newSessionId,
-  putSession,
+  sealSession,
 } from "@/lib/oauth";
 
 export async function GET(req: Request) {
@@ -32,9 +31,7 @@ export async function GET(req: Request) {
 
   try {
     const { accessToken, expiresAt } = await exchangeCode(code, saved.verifier);
-    const id = newSessionId();
-    putSession(id, accessToken, expiresAt);
-    jar.set(SESSION_COOKIE, id, {
+    jar.set(SESSION_COOKIE, await sealSession({ token: accessToken, expiresAt }), {
       httpOnly: true,
       sameSite: "lax",
       secure: cookieSecure(),

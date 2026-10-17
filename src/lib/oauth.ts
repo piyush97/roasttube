@@ -70,35 +70,81 @@ export async function exchangeCode(code: string, verifier: string): Promise<{
   };
 }
 
-// In-memory only: token lives until it expires or logout; never persisted to disk.
-// Stored on globalThis: Next compiles pages and route handlers as separate
-// module instances, so a plain module-level Map is NOT shared between the
-// OAuth callback (route handler) and the page render that reads it.
-type Session = { token: string; expiresAt: number };
-const globalSessions = globalThis as unknown as {
-  __roasttubeSessions?: Map<string, Session>;
-};
-const sessions: Map<string, Session> =
-  globalSessions.__roasttubeSessions ??
-  (globalSessions.__roasttubeSessions = new Map());
+// Sessions are sealed into the httpOnly cookie itself with AES-GCM (WebCrypto),
+// so no server-side session store is needed and the token never persists to
+// disk. The payload is exactly {token, expiresAt}; no refresh tokens are kept.
+export type Session = { token: string; expiresAt: number };
 
-export function putSession(id: string, token: string, expiresAt: number) {
-  // prune expired sessions so the Map can't grow unbounded
-  const now = Date.now();
-  for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
-  sessions.set(id, { token, expiresAt });
+// Per-process random fallback for local dev: sessions last until restart,
+// matching the old in-memory behavior. Production must set SESSION_SECRET.
+const DEV_SECRET = randomBytes(32).toString("hex");
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+function toBase64url(bytes: Uint8Array): string {
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
-export function getSession(id: string): { token: string; expiresAt: number } | undefined {
-  const s = sessions.get(id);
-  if (s && s.expiresAt < Date.now()) {
-    sessions.delete(id);
-    return undefined;
+
+function fromBase64url(value: string): Uint8Array<ArrayBuffer> | null {
+  try {
+    const b64 = value.replaceAll("-", "+").replaceAll("_", "/");
+    const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+    const raw = atob(b64 + pad);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
   }
-  return s;
 }
-export function dropSession(id: string) {
-  sessions.delete(id);
+
+let cachedKey: { secret: string; key: CryptoKey } | null = null;
+
+async function sessionKey(): Promise<CryptoKey> {
+  const secret = process.env.SESSION_SECRET ?? DEV_SECRET;
+  if (cachedKey && cachedKey.secret === secret) return cachedKey.key;
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret));
+  const key = await crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, [
+    "encrypt",
+    "decrypt",
+  ]);
+  cachedKey = { secret, key };
+  return key;
 }
-export function newSessionId(): string {
-  return randomBytes(16).toString("base64url");
+
+export async function sealSession(session: Session): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      await sessionKey(),
+      encoder.encode(JSON.stringify(session))
+    )
+  );
+  const out = new Uint8Array(iv.length + ciphertext.length);
+  out.set(iv);
+  out.set(ciphertext, iv.length);
+  return toBase64url(out);
+}
+
+export async function openSession(value: string): Promise<Session | null> {
+  if (!value) return null;
+  const raw = fromBase64url(value);
+  if (!raw || raw.length <= 12) return null;
+  try {
+    const plaintext = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: raw.subarray(0, 12) },
+      await sessionKey(),
+      raw.subarray(12)
+    );
+    const parsed = JSON.parse(decoder.decode(plaintext)) as Partial<Session>;
+    if (typeof parsed.token !== "string" || typeof parsed.expiresAt !== "number") return null;
+    if (parsed.expiresAt <= Date.now()) return null;
+    return { token: parsed.token, expiresAt: parsed.expiresAt };
+  } catch {
+    return null;
+  }
 }

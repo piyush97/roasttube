@@ -6,7 +6,7 @@ import { brainrotScore } from "@/lib/score";
 import { roast } from "@/lib/gemini";
 import { saveReport } from "@/lib/store";
 import { collect, QuotaError } from "@/lib/youtube";
-import { SESSION_COOKIE, getSession } from "@/lib/oauth";
+import { SESSION_COOKIE, openSession } from "@/lib/oauth";
 
 // 3 roasts per hour per IP, in-memory. Good enough for localhost + testing mode.
 const hits = new Map<string, number[]>();
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   } else if (body.source === "youtube") {
     const jar = await cookies();
     const sid = jar.get(SESSION_COOKIE)?.value;
-    const sess = sid ? getSession(sid) : undefined;
+    const sess = sid ? await openSession(sid) : null;
     if (!sess) {
       return NextResponse.json(
         { error: "not_signed_in", message: "Sign in with Google first." },

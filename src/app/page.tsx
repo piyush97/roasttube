@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
-  getSession,
+  openSession,
   isOAuthConfigured,
 } from "@/lib/oauth";
 import { RoastButtons } from "@/components/RoastButtons";
@@ -13,7 +13,7 @@ export default async function Home({
 }) {
   const { error, run } = await searchParams;
   const jar = await cookies();
-  const signedIn = Boolean(getSession(jar.get(SESSION_COOKIE)?.value ?? ""));
+  const signedIn = Boolean(await openSession(jar.get(SESSION_COOKIE)?.value ?? ""));
   const oauthConfigured = isOAuthConfigured();
   const geminiKey = Boolean(process.env.GEMINI_API_KEY);
   const today = new Date().toLocaleDateString("en-GB", {
