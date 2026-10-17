@@ -117,6 +117,8 @@ ask() {
   read -e -r -p "$p" input || rc=1
   if (( rc )) && [[ -z "$input" ]]; then return 1; fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
+  # Pasted values often arrive wrapped in quotes; strip any layers.
+  input=$(_strip_quotes "$input")
   printf -v "$key" '%s' "$input"
 }
 
@@ -133,6 +135,8 @@ ask_secret() {
   printf '\n'
   if (( rc )) && [[ -z "$input" ]]; then return 1; fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
+  # Pasted values often arrive wrapped in quotes; strip any layers.
+  input=$(_strip_quotes "$input")
   printf -v "$key" '%s' "$input"
 }
 
@@ -199,6 +203,20 @@ finish() {
 # the whole file before the first prompt, so an edit mid-run can't break it.
 # ──────────────────────────────────────────────────────────────────────────
 
+# _strip_quotes VALUE — prints VALUE with any layers of wrapping ' or "
+# quotes removed. Values pasted from consoles or written by older wizard
+# runs can arrive double-wrapped (''value''), so strip repeatedly.
+_strip_quotes() {
+  local value="$1"
+  while [[ ${#value} -ge 2 ]]; do
+    if [[ "$value" == \"*\" && "$value" == *\" ]]; then value="${value:1:${#value}-2}"
+    elif [[ "$value" == \'*\' && "$value" == *\' ]]; then value="${value:1:${#value}-2}"
+    else break
+    fi
+  done
+  printf '%s' "$value"
+}
+
 # _read_dotenv KEY FILE — prints the dotenv-ish value for KEY ('' when missing).
 _read_dotenv() {
   local key="$1" file="$2" line value
@@ -207,15 +225,14 @@ _read_dotenv() {
   [[ -n "$line" ]] || return 0
   value="${line#*=}"
   value="${value%$'\r'}"
-  if [[ "$value" == \"*\" && "$value" == *\" ]]; then value="${value:1:${#value}-2}"
-  elif [[ "$value" == \'*\' && "$value" == *\' ]]; then value="${value:1:${#value}-2}"
-  fi
+  value=$(_strip_quotes "$value")
   printf '%s' "$value"
 }
 
 # _cf_secret NAME VALUE — uploads a Worker secret without echoing the value.
 _cf_secret() {
   local name="$1" value="$2"
+  value=$(_strip_quotes "$value")
   if [[ -z "$value" ]]; then
     warn "no value captured for secret $name — skipping"
     SKIPPED+=("secret $name (cf workers secrets update $name --type secret_text --worker roasttube)")
