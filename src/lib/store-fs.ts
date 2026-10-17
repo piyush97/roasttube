@@ -3,10 +3,13 @@ import { join } from "node:path";
 import type { RoastReport, ScoreResult, Signals, StoredReport } from "./types.ts";
 import { ID_RE, newId } from "./ids.ts";
 
-const DIR = join(process.cwd(), "data", "reports");
+// Overridable via ROASTTUBE_DATA_DIR so tests never touch the real folder.
+function reportsDir(): string {
+  return process.env.ROASTTUBE_DATA_DIR ?? join(process.cwd(), "data", "reports");
+}
 
 async function ensureDir() {
-  await mkdir(DIR, { recursive: true });
+  await mkdir(reportsDir(), { recursive: true });
 }
 
 export async function saveReport(
@@ -29,7 +32,7 @@ export async function saveReport(
   for (let i = 0; i < 5; i++) {
     const id = newId();
     try {
-      await writeFile(join(DIR, `${id}.json`), JSON.stringify({ id, ...stored }, null, 2), {
+      await writeFile(join(reportsDir(), `${id}.json`), JSON.stringify({ id, ...stored }, null, 2), {
         flag: "wx",
       });
       return id;
@@ -43,7 +46,7 @@ export async function saveReport(
 export async function getReport(id: string): Promise<StoredReport | null> {
   if (!ID_RE.test(id)) return null;
   try {
-    return JSON.parse(await readFile(join(DIR, `${id}.json`), "utf8"));
+    return JSON.parse(await readFile(join(reportsDir(), `${id}.json`), "utf8"));
   } catch {
     return null;
   }
@@ -52,7 +55,7 @@ export async function getReport(id: string): Promise<StoredReport | null> {
 export async function listReports(limit = 20): Promise<StoredReport[]> {
   let files: string[];
   try {
-    files = await readdir(DIR);
+    files = await readdir(reportsDir());
   } catch {
     return [];
   }
@@ -62,7 +65,7 @@ export async function listReports(limit = 20): Promise<StoredReport[]> {
       .map(async (f) => {
         try {
           return JSON.parse(
-            await readFile(join(DIR, f), "utf8")
+            await readFile(join(reportsDir(), f), "utf8")
           ) as StoredReport;
         } catch {
           return null;
@@ -78,7 +81,7 @@ export async function listReports(limit = 20): Promise<StoredReport[]> {
 export async function deleteReport(id: string): Promise<boolean> {
   if (!ID_RE.test(id)) return false;
   try {
-    await unlink(join(DIR, `${id}.json`));
+    await unlink(join(reportsDir(), `${id}.json`));
     return true;
   } catch {
     return false;

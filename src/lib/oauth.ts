@@ -75,9 +75,17 @@ export async function exchangeCode(code: string, verifier: string): Promise<{
 // disk. The payload is exactly {token, expiresAt}; no refresh tokens are kept.
 export type Session = { token: string; expiresAt: number };
 
-// Per-process random fallback for local dev: sessions last until restart,
-// matching the old in-memory behavior. Production must set SESSION_SECRET.
-const DEV_SECRET = randomBytes(32).toString("hex");
+// Per-process random fallback for local dev: sessions last until restart.
+// Production must set SESSION_SECRET. Stored on globalThis because dev
+// servers compile each route into its own module registry — a module-local
+// secret would differ between the callback route and the page reading it.
+// Created lazily: workerd forbids generating random values at module scope.
+const devSecretStore = globalThis as typeof globalThis & { __rtDevSecret?: string };
+
+function fallbackSecret(): string {
+  devSecretStore.__rtDevSecret ??= randomBytes(32).toString("hex");
+  return devSecretStore.__rtDevSecret;
+}
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -104,7 +112,7 @@ function fromBase64url(value: string): Uint8Array<ArrayBuffer> | null {
 let cachedKey: { secret: string; key: CryptoKey } | null = null;
 
 async function sessionKey(): Promise<CryptoKey> {
-  const secret = process.env.SESSION_SECRET ?? DEV_SECRET;
+  const secret = process.env.SESSION_SECRET ?? fallbackSecret();
   if (cachedKey && cachedKey.secret === secret) return cachedKey.key;
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret));
   const key = await crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, [

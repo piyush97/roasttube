@@ -288,6 +288,11 @@ else
   note "kept the existing SESSION_SECRET from .dev.vars"
 fi
 write_env SESSION_SECRET "$SESSION_SECRET"
+# next dev reads .env.local (not .dev.vars); the same secret there keeps
+# sessions valid across dev-server restarts under both toolchains.
+save_env_file=$ENV_FILE
+ENV_FILE=.env.local write_env SESSION_SECRET "$SESSION_SECRET"
+ENV_FILE=$save_env_file
 write_env TURNSTILE_SITE_KEY "1x00000000000000000000AA"
 write_env TURNSTILE_SECRET_KEY "1x0000000000000000000000000000000AA"
 write_env NEXT_PUBLIC_APP_URL "http://localhost:3001"

@@ -1,6 +1,7 @@
-import { test, before, after } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   deleteReport,
@@ -24,11 +25,11 @@ const report: RoastReport = {
 const signals = {} as Signals;
 const score: ScoreResult = { score: 42, tier: "Unhinged", breakdown: [] };
 
-const dir = join(process.cwd(), "data", "reports");
+// A scratch folder: without the override the store writes into the real
+// data/reports folder and the cleanup below would delete actual reports.
+const dir = await mkdtemp(join(tmpdir(), "rt-store-"));
+process.env.ROASTTUBE_DATA_DIR = dir;
 
-before(async () => {
-  await rm(dir, { recursive: true, force: true });
-});
 after(async () => {
   await rm(dir, { recursive: true, force: true });
 });

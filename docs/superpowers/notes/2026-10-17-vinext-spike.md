@@ -44,3 +44,20 @@ Observations:
 - `npm test` 58/58 · `npx tsc --noEmit` exit 0 (after `rm -rf .next`) · `npm run lint` exit 0 · `npm run build` exit 0 · `npm run build:vinext` exit 0.
 
 Update (Task 2): with `cacheComponents`/`partialPrefetching` removed and the turbopack CSS rule gone, `vinext check` stays clean except one partial — the `turbopack` key itself, kept for the `root` pin that `next dev` needs (Vite ignores it). `next build` after the removal shows `ƒ /` and `ƒ /report/[id]`, both dynamic.
+
+## Task 9 findings (local Workers E2E)
+
+- Workerd forbids generating random values at module scope. `oauth.ts`'s `DEV_SECRET` was created eagerly → preview returned 500 "Disallowed operation called within global scope". Fixed with a lazy `fallbackSecret()`. Rule for worker-reachable files: no random, timers, or I/O at module scope.
+- `.dev.vars` supplies **secrets** under preview (TURNSTILE_SECRET_KEY from the file was live: a tokenless request got 403 `turnstile_failed`), but config-declared `bindings.text()` vars are authoritative and **not** overridable from `.dev.vars` (budget stayed 15 despite `.dev.vars` `DAILY_ROAST_BUDGET='0'`; verified via two admitted requests). Vars are changed in `cloudflare.config.ts` or the dashboard.
+- Local KV state lives in `.cloudflare/state/v3/kv` (gitignored). The preview Local Explorer API (`/cdn-cgi/local/explorer/api/storage/kv/namespaces/<id>/values/<key>`) can read, seed, and delete KV values: used to trip the budget gate without spending a generation and to force a cache miss.
+- `dailyBudgetCap` clamps to ≥1, so `0` still admits one uncached roast; the "court has heard enough cases today" message appears on the next uncached request. Cache hits never consume budget.
+- bsk refs are invalidated by navigation (re-observe before each click), and sessions can be reaped between shell calls; a fresh session is cheap.
+- E2E transcript (preview): home rendered with fonts/styles; Lurker → `/report/rws0db74`; Lurker again → same id (demo cache); Gremlin → `/report/w3v0xxx4`; 4th request → 429 "3 roasts per hour. Breathe."; preview restarted → cached report still renders (KV-backed); budget gate message shown in the browser via a temporary config override (reverted).
+
+## Task 9 findings, next dev phase
+
+- `next dev` compiles each route into its own module registry, so a module-local fallback secret differs between the callback route and the page reading it: sessions never opened. The fallback secret now lives on `globalThis` (still lazy, still per-process). Verified live: callback → `/?run=1` → signed-in home → auto-run YouTube roast → `/report/s3zsveb1`.
+- `rm -rf .next` while `next dev` is running makes Next dev self-restart ("Restarting the server to recover"). That rotates the per-process fallback secret, invalidating existing sessions. Stop the dev server before clearing `.next`.
+- `tests/store.test.ts` used to `rm -rf data/reports` (the real folder) in `before`/`after`, deleting actual local reports on every `npm test`. `store-fs.ts` now reads `ROASTTUBE_DATA_DIR` (lazy) and the test uses `mkdtemp`; `npm test` leaves the real folder alone.
+- Server-side session cycle, verified with curl against `next dev` after setting `SESSION_SECRET` in `.env.local` (also upserted by the wizard): sealed cookie → home renders "Sign out"; `GET /api/auth/logout` → 307 + `rt_session` expired; no cookie → signed out. `SIGN OUT`/`Exhibit A` labels are fragmented in SSR HTML (`SIGN<!-- -->OUT`, `Exhibit <!-- -->A`) — grep in lowercase or after hydration.
+- `.env.local` now carries `SESSION_SECRET` (same value as `.dev.vars`) so dev sessions survive restarts under both toolchains. `.env.local` stays gitignored.
