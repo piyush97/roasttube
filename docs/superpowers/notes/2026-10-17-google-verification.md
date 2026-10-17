@@ -115,7 +115,8 @@ re-uploaded to the Worker.
 
 ### Remaining before submission
 
-1. Branding → set App name `RoastTube` (everything else in section 1 stands as listed).
+1. Branding → set App name `RoastTube` and upload the current logo (`public/consent-logo.png`,
+   now the character mark). If the older wordmark was uploaded before, replace it.
 2. Publish app to Production in Audience (if not already done).
 3. Demo video (section 2) — use an account that has never granted RoastTube access.
 4. Submit in the Verification Center with the justification in section 3.
