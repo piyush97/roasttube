@@ -112,11 +112,11 @@ export default function Privacy() {
         <h2 className="headline mt-10 text-3xl sm:text-5xl">SHARING</h2>
         <p className="mt-4 max-w-2xl text-lg leading-7">
           Only two organizations see any of it, and only to make the site
-          work: Google (the YouTube Data API, which reads your lists) and
-          Cloudflare (hosting, Workers KV storage, Turnstile, and the AI model
-          that writes the roast). Your data is never sold or shared for
-          advertising or surveillance, never sent to data brokers, and never
-          used for credit or lending decisions.
+          work: Google (the YouTube Data API, which reads your lists, and the
+          Gemini model that writes the roast) and Cloudflare (hosting, Workers
+          KV storage, and Turnstile, the bot check). Your data is never sold or
+          shared for advertising or surveillance, never sent to data brokers,
+          and never used for credit or lending decisions.
         </p>
 
         <h2 className="headline mt-10 text-3xl sm:text-5xl">
@@ -131,9 +131,12 @@ export default function Privacy() {
           or channel IDs, your account identity, or raw API responses.
         </p>
         <p className="mt-4 max-w-2xl text-lg leading-7">
-          The model runs on Cloudflare Workers AI. Inputs and outputs are not
-          retained and are not used to train AI models (Cloudflare Workers AI
-          data usage commitments).
+          The model runs on Google's Gemini, on its paid tier, where Google
+          does not use prompts or responses to train its models (Gemini API
+          Terms of Service, Paid Services). A fallback model may run on
+          Cloudflare Workers AI, where inputs and outputs are not retained and
+          are not used to train AI models (Cloudflare Workers AI data usage
+          commitments).
         </p>
 
         <h2 className="headline mt-10 text-3xl sm:text-5xl">
@@ -211,8 +214,9 @@ export default function Privacy() {
         <h2 className="headline mt-10 text-3xl sm:text-5xl">CHILDREN</h2>
         <p className="mt-4 max-w-2xl text-lg leading-7">
           RoastTube is for grown-ups with strong opinions and mild case files.
-          It is not directed to children under 13, and we do not knowingly
-          collect information from them.
+          The AI model in our chain requires adults: the site is not directed
+          to anyone under 18, and we do not knowingly collect information from
+          anyone under 18.
         </p>
 
         <h2 className="headline mt-10 text-3xl sm:text-5xl">CHANGES</h2>
