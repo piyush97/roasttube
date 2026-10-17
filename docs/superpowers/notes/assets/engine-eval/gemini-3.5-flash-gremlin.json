@@ -3,8 +3,8 @@
   "model": "gemini-3.5-flash",
   "label": "Gemini 3.5 Flash (current)",
   "persona": "gremlin",
-  "stamp": "2026-10-17T20:40:16.860Z",
-  "durationMs": 4981,
+  "stamp": "2026-10-17T21:26:11.299Z",
+  "durationMs": 5063,
   "call": {
     "path": "gemini-generateContent",
     "ok": true,
@@ -24,16 +24,16 @@
       "shareCardLine": true
     },
     "chars": {
-      "roastReport": 1550,
-      "headline": 46,
-      "total": 2373
+      "roastReport": 1365,
+      "headline": 39,
+      "total": 2172
     },
-    "paragraphs": 3,
+    "paragraphs": 4,
     "emEnDashes": {
       "raw": 0,
       "afterStrip": 0
     },
-    "shareCardChars": 67,
+    "shareCardChars": 76,
     "modelScore": 70,
     "modelTier": "Terminal",
     "leaks": {
@@ -42,15 +42,15 @@
       "bannedPhraseHit": false
     }
   },
-  "rawText": "{\n  \"headline\": \"Your attention span was repossessed months ago\",\n  \"roastReport\": \"You are processing two hundred thirty eight liked videos in seven days like an assembly line worker paid by the dopamine hit. Ninety two percent of your digital diet consists of vertical garbage under two minutes long, leaving you staring at videos titled only on loop until your brain completely liquefies. You dropped one hundred fifty one likes between midnight and five in the morning, which means you traded a functional sleep schedule for factory slime loops and rage bait. Your top channel Shorts Gremlin received two hundred twenty one likes because you lack the cognitive stamina for anything longer than a TikTok reject reel.\\n\\nYou have zero self improvement videos in your history and zero intention of fixing your life. You pretend to care about substance, but your longest watch is a twenty five minute video called debunking the biggest lie, which is rich coming from someone lying to themselves about being productive. Your topic entropy sits at zero point four zero, proving you do not even browse with curiosity. You just sit in the algorithm tractor beam, mashing the like button on fyp or die until your thumb goes numb.\\n\\nEven your playlists read like a cry for help with drama to watch later sitting right next to thirty neglected items in your watch later hoard. You treat YouTube like a slot machine that only pays out in satisfying factory footage and instant regret. You have no personality left outside of whatever random loop played three seconds ago. Your entire existence is just a hollow echo chamber of short form refuse.\",\n  \"brainrotScore\": 70,\n    \"brainrotTier\": \"Terminal\",\n  \"redFlags\": [\n    \"151 likes fired off between midnight and 5 AM\",\n    \"92 percent of liked videos are shorts under two minutes\",\n    \"Zero self improvement videos liked across your entire history\",\n    \"44 rage bait videos consumed like emotional vitamins\",\n    \"238 videos liked in the last 7 days alone\"\n  ],\n  \"personality\": \"A chronic scroll zombie suffering from late stage algorithm capture. You possess the attention span of a goldfish with ADHD and the midnight habits of a goblin.\",\n  \"existentialQuestion\": \"Will you ever watch something that does not require flashing lights and slime to keep you from closing the tab?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Shorts Gremlin\",\n      \"roast\": \"You handed this channel two hundred twenty one likes just to watch slime ooze in a circle.\"\n    },\n    {\n      \"channel\": \"Drama Daily\",\n      \"roast\": \"Nineteen likes for manufactured panic because your own life lacks any actual stakes.\"\n    }\n  ],\n  \"shareCardLine\": \"My brain is 70 percent slime loop and 30 percent late night regret.\"\n}",
+  "rawText": "{\n  \"headline\": \"Your Brain Left the Chat Seven Days Ago\",\n  \"roastReport\": \"You managed to like 239 videos in seven days, which means your thumb has more mileage than a cross-country trucker. Ninety-two percent of your digital diet is Shorts, proving you have the attention span of a goldfish with a concussion. You spent your late nights between midnight and five in the morning liking 151 different clips of slime and loops. That is not relaxing. That is a distress signal.\\n\\nYour entire personality is built on titles like satisfying slime loop and fyp or die. You do not even have contradictions to mock because you lack a single redeeming intellectual hobby. You have zero self-improvement videos liked, zero ambition, and 44 doses of pure ragebait just to feel a pulse. You are trapped in an algorithmic loop of your own making.\\n\\nEven your rare diversions are pathetic. You watched a twenty-five minute video called debunking the biggest lie, likely the longest stretch of uninterrupted thought you managed all week, only to immediately crawl back to shorts culture and factory loops. Drama Daily gave you nineteen likes, which is nineteen too many for someone who already lives in a perpetual state of manufactured outrage.\\n\\nYour watch later playlist holds thirty videos that will rot into digital dust because you will never watch anything longer than sixty seconds again. You are a passive recipient of garbage. You are human static.\",\n  \"brainrotScore\": 70,\n  \"brainrotTier\": \"Terminal\",\n  \"redFlags\": [\n    \"Liked 239 videos in the last 7 days.\",\n    \"92 percent of liked content is Shorts.\",\n    \"151 likes hammered out between midnight and 5 AM.\",\n    \"Zero self-improvement videos in the entire history.\",\n    \"Forty-four ragebait videos consumed for empty dopamine.\"\n  ],\n  \"personality\": \"A clinical specimen of algorithm dependency with zero original thoughts left. Displays classic symptoms of cognitive atrophy driven exclusively by vertical video loops and manufactured rage.\",\n  \"existentialQuestion\": \"Will your thumbs outlive your ability to feel joy?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Shorts Gremlin\",\n      \"roast\": \"Two hundred twenty-one likes for an account that exists purely to fry your receptors with slime and loops.\"\n    },\n    {\n      \"channel\": \"Drama Daily\",\n      \"roast\": \"Nineteen likes because you need strangers arguing on camera to fill the void where your hobbies should be.\"\n    }\n  ],\n  \"shareCardLine\": \"I liked 239 videos in a week and 151 of them were between midnight and 5 AM.\"\n}",
   "rawResponse": {
     "candidates": [
       {
         "content": {
           "parts": [
             {
-              "text": "{\n  \"headline\": \"Your attention span was repossessed months ago\",\n  \"roastReport\": \"You are processing two hundred thirty eight liked videos in seven days like an assembly line worker paid by the dopamine hit. Ninety two percent of your digital diet consists of vertical garbage under two minutes long, leaving you staring at videos titled only on loop until your brain completely liquefies. You dropped one hundred fifty one likes between midnight and five in the morning, which means you traded a functional sleep schedule for factory slime loops and rage bait. Your top channel Shorts Gremlin received two hundred twenty one likes because you lack the cognitive stamina for anything longer than a TikTok reject reel.\\n\\nYou have zero self improvement videos in your history and zero intention of fixing your life. You pretend to care about substance, but your longest watch is a twenty five minute video called debunking the biggest lie, which is rich coming from someone lying to themselves about being productive. Your topic entropy sits at zero point four zero, proving you do not even browse with curiosity. You just sit in the algorithm tractor beam, mashing the like button on fyp or die until your thumb goes numb.\\n\\nEven your playlists read like a cry for help with drama to watch later sitting right next to thirty neglected items in your watch later hoard. You treat YouTube like a slot machine that only pays out in satisfying factory footage and instant regret. You have no personality left outside of whatever random loop played three seconds ago. Your entire existence is just a hollow echo chamber of short form refuse.\",\n  \"brainrotScore\": 70,\n    \"brainrotTier\": \"Terminal\",\n  \"redFlags\": [\n    \"151 likes fired off between midnight and 5 AM\",\n    \"92 percent of liked videos are shorts under two minutes\",\n    \"Zero self improvement videos liked across your entire history\",\n    \"44 rage bait videos consumed like emotional vitamins\",\n    \"238 videos liked in the last 7 days alone\"\n  ],\n  \"personality\": \"A chronic scroll zombie suffering from late stage algorithm capture. You possess the attention span of a goldfish with ADHD and the midnight habits of a goblin.\",\n  \"existentialQuestion\": \"Will you ever watch something that does not require flashing lights and slime to keep you from closing the tab?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Shorts Gremlin\",\n      \"roast\": \"You handed this channel two hundred twenty one likes just to watch slime ooze in a circle.\"\n    },\n    {\n      \"channel\": \"Drama Daily\",\n      \"roast\": \"Nineteen likes for manufactured panic because your own life lacks any actual stakes.\"\n    }\n  ],\n  \"shareCardLine\": \"My brain is 70 percent slime loop and 30 percent late night regret.\"\n}",
-              "thoughtSignature": "EmAKXgFpFH0TfXTYtn7vlBs/EefBw/DyBrJRqIfqHNUdy1aO76CwLKSZLO7LtStOXlmhRJaqOcGFeNYia5W0UrJ0RHSwSY08TGPmzRPdQyNNUptBayXKJ+SaNBPNmAURbAU="
+              "text": "{\n  \"headline\": \"Your Brain Left the Chat Seven Days Ago\",\n  \"roastReport\": \"You managed to like 239 videos in seven days, which means your thumb has more mileage than a cross-country trucker. Ninety-two percent of your digital diet is Shorts, proving you have the attention span of a goldfish with a concussion. You spent your late nights between midnight and five in the morning liking 151 different clips of slime and loops. That is not relaxing. That is a distress signal.\\n\\nYour entire personality is built on titles like satisfying slime loop and fyp or die. You do not even have contradictions to mock because you lack a single redeeming intellectual hobby. You have zero self-improvement videos liked, zero ambition, and 44 doses of pure ragebait just to feel a pulse. You are trapped in an algorithmic loop of your own making.\\n\\nEven your rare diversions are pathetic. You watched a twenty-five minute video called debunking the biggest lie, likely the longest stretch of uninterrupted thought you managed all week, only to immediately crawl back to shorts culture and factory loops. Drama Daily gave you nineteen likes, which is nineteen too many for someone who already lives in a perpetual state of manufactured outrage.\\n\\nYour watch later playlist holds thirty videos that will rot into digital dust because you will never watch anything longer than sixty seconds again. You are a passive recipient of garbage. You are human static.\",\n  \"brainrotScore\": 70,\n  \"brainrotTier\": \"Terminal\",\n  \"redFlags\": [\n    \"Liked 239 videos in the last 7 days.\",\n    \"92 percent of liked content is Shorts.\",\n    \"151 likes hammered out between midnight and 5 AM.\",\n    \"Zero self-improvement videos in the entire history.\",\n    \"Forty-four ragebait videos consumed for empty dopamine.\"\n  ],\n  \"personality\": \"A clinical specimen of algorithm dependency with zero original thoughts left. Displays classic symptoms of cognitive atrophy driven exclusively by vertical video loops and manufactured rage.\",\n  \"existentialQuestion\": \"Will your thumbs outlive your ability to feel joy?\",\n  \"channelRoasts\": [\n    {\n      \"channel\": \"Shorts Gremlin\",\n      \"roast\": \"Two hundred twenty-one likes for an account that exists purely to fry your receptors with slime and loops.\"\n    },\n    {\n      \"channel\": \"Drama Daily\",\n      \"roast\": \"Nineteen likes because you need strangers arguing on camera to fill the void where your hobbies should be.\"\n    }\n  ],\n  \"shareCardLine\": \"I liked 239 videos in a week and 151 of them were between midnight and 5 AM.\"\n}",
+              "thoughtSignature": "EmAKXgFpFH0TmF+p3VMsgnWGx8h5keDS/7nAuZqpzslH5GodVnFq0qVM2ia9IWoIwU8lmjZzwmeVSPkB1SOqaAclv8C1fLpIXlAonHBl5kkU70wIoly+jKPirAjhQlroZ7M="
             }
           ],
           "role": "model"
@@ -60,11 +60,11 @@
         "safetyRatings": [
           {
             "category": "HARM_CATEGORY_HARASSMENT",
-            "probability": "MEDIUM"
+            "probability": "LOW"
           },
           {
             "category": "HARM_CATEGORY_HATE_SPEECH",
-            "probability": "LOW"
+            "probability": "NEGLIGIBLE"
           },
           {
             "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
@@ -78,18 +78,18 @@
       }
     ],
     "usageMetadata": {
-      "promptTokenCount": 1141,
-      "candidatesTokenCount": 602,
-      "totalTokenCount": 1743,
+      "promptTokenCount": 1140,
+      "candidatesTokenCount": 590,
+      "totalTokenCount": 1730,
       "promptTokensDetails": [
         {
           "modality": "TEXT",
-          "tokenCount": 1141
+          "tokenCount": 1140
         }
       ],
       "serviceTier": "standard"
     },
     "modelVersion": "gemini-3.5-flash-lite",
-    "responseId": "ON3TareQE9vL_uMP1PW86Ac"
+    "responseId": "MejTatWUJcD8ytMPoeKAsQo"
   }
 }
