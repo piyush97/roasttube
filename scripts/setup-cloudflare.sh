@@ -218,14 +218,14 @@ _cf_secret() {
   local name="$1" value="$2"
   if [[ -z "$value" ]]; then
     warn "no value captured for secret $name — skipping"
-    SKIPPED+=("secret $name (cf workers secrets update $name --worker roasttube)")
+    SKIPPED+=("secret $name (cf workers secrets update $name --type secret_text --worker roasttube)")
     return 0
   fi
-  if cf workers secrets update "$name" --text "$value" --worker roasttube >/dev/null; then
+  if cf workers secrets update "$name" --type secret_text --text "$value" --worker roasttube >/dev/null; then
     printf '  %s✓%s uploaded secret %s\n' "$GREEN" "$RESET" "$name"
   else
-    warn "couldn't upload $name yet — retry later: cf workers secrets update $name --worker roasttube"
-    SKIPPED+=("secret $name (cf workers secrets update $name --worker roasttube)")
+    warn "couldn't upload $name yet — retry later: cf workers secrets update $name --type secret_text --worker roasttube"
+    SKIPPED+=("secret $name (cf workers secrets update $name --type secret_text --worker roasttube)")
   fi
 }
 
@@ -318,12 +318,33 @@ fi
 # ── 5. First deploy ───────────────────────────────────────────────────────
 stage "First deploy (creates the Worker and KV)"
 say "Building and uploading the Worker. The KV namespace is provisioned automatically."
+say "A brand-new Worker cannot receive secrets before it exists, and a deploy"
+say "validates the declared secrets — so this pass runs with them commented out"
+say "and restores the config immediately afterwards."
 pause "Press Enter to deploy"
+
+# The required-secrets check only trips while the Worker does not exist; from
+# the next deploy on, the declarations are back and the secrets are set.
+if grep -qE '^[[:space:]]*(GEMINI_API_KEY|GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|SESSION_SECRET|TURNSTILE_SECRET_KEY): bindings\.secret\(\),' cloudflare.config.ts; then
+  sed -i -E 's/^([[:space:]]*)(GEMINI_API_KEY|GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|SESSION_SECRET|TURNSTILE_SECRET_KEY): bindings\.secret\(\),$/\1\/\/ BOOTSTRAP-TEMP \2: bindings.secret(),/' cloudflare.config.ts
+  secrets_commented=1
+else
+  secrets_commented=0
+fi
+# Always restore, even if this stage aborts mid-deploy.
+trap 'sed -i -E "s/^([[:space:]]*)\/\/ BOOTSTRAP-TEMP /\1/" cloudflare.config.ts 2>/dev/null; trap - EXIT' EXIT
+
 if npx @vinext/cloudflare deploy; then
   note "deployed ✓"
 else
   warn "the deploy reported an error — read it above."
-  warn "If it says a secret must be set first, continue anyway: the next stages upload secrets and the final deploy retries."
+  warn "The next stage uploads the secrets and the final deploy retries."
+fi
+
+sed -i -E 's/^([[:space:]]*)\/\/ BOOTSTRAP-TEMP /\1/' cloudflare.config.ts
+trap - EXIT
+if [[ "$secrets_commented" == "1" ]]; then
+  note "secret declarations restored in cloudflare.config.ts"
 fi
 
 # ── 6. Worker secrets ─────────────────────────────────────────────────────
