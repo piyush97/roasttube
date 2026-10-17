@@ -1,5 +1,10 @@
 import { connection } from "next/server";
-import { isOAuthConfigured } from "@/lib/oauth";
+import { cookies } from "next/headers";
+import {
+  SESSION_COOKIE,
+  getSession,
+  isOAuthConfigured,
+} from "@/lib/oauth";
 import { RoastButtons } from "@/components/RoastButtons";
 
 // Dateline shows today's date; render per request instead of at build.
@@ -7,6 +12,8 @@ export const instant = false;
 
 export default async function Home() {
   await connection(); // dateline is today's date — render per request, not at build
+  const jar = await cookies();
+  const signedIn = Boolean(getSession(jar.get(SESSION_COOKIE)?.value ?? ""));
   const oauthConfigured = isOAuthConfigured();
   const geminiKey = Boolean(process.env.GEMINI_API_KEY);
   const today = new Date().toLocaleDateString("en-GB", {
@@ -54,7 +61,11 @@ export default async function Home() {
         </p>
       </section>
 
-      <RoastButtons oauthConfigured={oauthConfigured} geminiKey={geminiKey} />
+      <RoastButtons
+        oauthConfigured={oauthConfigured}
+        geminiKey={geminiKey}
+        signedIn={signedIn}
+      />
 
       <footer className="mt-14">
         <div className="rule-thick" />

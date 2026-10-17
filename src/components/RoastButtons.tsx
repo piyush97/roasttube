@@ -27,9 +27,11 @@ const PERSONAS = [
 export function RoastButtons({
   oauthConfigured,
   geminiKey,
+  signedIn,
 }: {
   oauthConfigured: boolean;
   geminiKey: boolean;
+  signedIn: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -61,6 +63,28 @@ export function RoastButtons({
   const demoReason = "Needs GEMINI_API_KEY in .env.local — the roast engine runs on Gemini.";
   const oauthReason =
     "Needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env.local. Until then, the demo cases below are fully admissible.";
+
+  async function runYouTube() {
+    setBusy("youtube");
+    setError(null);
+    try {
+      const res = await fetch("/api/roast", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ source: "youtube" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message ?? `Roast failed (${res.status}).`);
+        setBusy(null);
+        return;
+      }
+      router.push(`/report/${data.id}`);
+    } catch {
+      setError("Could not reach the court. Is the server still up?");
+      setBusy(null);
+    }
+  }
 
   return (
     <div className="mt-10">
@@ -97,21 +121,43 @@ export function RoastButtons({
       </div>
 
       <div className="mt-8">
-        <a
-          href={oauthConfigured ? "/api/auth/login" : undefined}
-          aria-disabled={!oauthConfigured}
-          title={!oauthConfigured ? oauthReason : undefined}
-          onClick={(e) => {
-            if (!oauthConfigured) e.preventDefault();
-          }}
-          className={`inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 font-display text-xl uppercase tracking-wide text-[var(--paper)] ${
-            oauthConfigured
-              ? "transition-transform hover:-translate-y-0.5"
-              : "cursor-not-allowed opacity-50"
-          }`}
-        >
-          Roast my YouTube
-        </a>
+        {signedIn ? (
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              disabled={busy !== null || !geminiKey}
+              title={!geminiKey ? demoReason : undefined}
+              onClick={runYouTube}
+              className="inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 font-display text-xl uppercase tracking-wide text-[var(--paper)] transition-transform enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy === "youtube"
+                ? "Subpoenas flying…"
+                : "Roast my YouTube →"}
+            </button>
+            <a
+              href="/api/auth/logout"
+              className="font-mono text-xs uppercase tracking-wide text-ink-soft underline"
+            >
+              Sign out
+            </a>
+          </div>
+        ) : (
+          <a
+            href={oauthConfigured ? "/api/auth/login" : undefined}
+            aria-disabled={!oauthConfigured}
+            title={!oauthConfigured ? oauthReason : undefined}
+            onClick={(e) => {
+              if (!oauthConfigured) e.preventDefault();
+            }}
+            className={`inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 font-display text-xl uppercase tracking-wide text-[var(--paper)] ${
+              oauthConfigured
+                ? "transition-transform hover:-translate-y-0.5"
+                : "cursor-not-allowed opacity-50"
+            }`}
+          >
+            Roast my YouTube
+          </a>
+        )}
         {!oauthConfigured && (
           <p className="mt-2 max-w-md font-mono text-xs leading-4 text-ink-soft">
             {oauthReason}
