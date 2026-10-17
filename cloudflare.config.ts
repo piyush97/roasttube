@@ -4,6 +4,8 @@ export default defineConfig({
   worker: defineWorker({
     name: "roasttube",
     entrypoint: "vinext/server/fetch-handler",
+    // Attached in Task 11, after the workers.dev smoke passed.
+    domains: ["roasttube.piyushmehta.com"],
     compatibilityDate: "2026-10-17",
     compatibilityFlags: ["nodejs_compat"],
     observability: { enabled: true },

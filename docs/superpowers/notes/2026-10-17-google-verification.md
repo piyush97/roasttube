@@ -1,8 +1,9 @@
 # Google OAuth verification prep — RoastTube
 
 Status as of 2026-10-17: code side is built, merged, and deployed (commits `06d9c8f`, `36f4ae3`;
-Worker version `ad851edb-f09e-4502-8777-e1d00e2543ac`). The verification submission is blocked on
-the console steps below plus a demo video recorded against the live production flow.
+Worker version `ad851edb-f09e-4502-8777-e1d00e2543ac`). The production E2E passes end to end.
+The verification submission is now blocked only on: Branding App name fix, Publish to Production
+(if not yet), the demo video, and the submission form itself.
 
 Live URLs (all return 200):
 
@@ -81,10 +82,40 @@ Google wants a short, unedited walkthrough of the real flow. Checklist:
 > liked videos and playlist titles requires read access to the user's own YouTube account data.
 > Full details: https://roasttube.piyushmehta.com/privacy
 
-## 4. Still pending from Task 11 (prod E2E)
+## 4. Prod E2E — passed 2026-10-17
 
-1. Local DNS flush so this machine resolves the new domain:
-   `sudo resolvectl flush-caches` (fallback: `chrome://net-internals/#dns` → Clear host cache).
-2. The authorized redirect URI above (console → Credentials).
-3. Then the agent runs the prod E2E in the browser: home → demo roast (cache) → Google sign-in
-   round-trip → auto-run roast → report → sign-out → rate-limit message.
+Recorded run on the custom domain (browser session via bsk):
+
+1. Home loads at https://roasttube.piyushmehta.com with the new Privacy/Terms footer links.
+2. Demo click 1 (The Lurker) → `/report/5uej7f57` served from the demo cache.
+3. Demo click 2 → same report id; cache confirmed.
+4. Google sign-in round-trip → callback → `/?run=1` → auto-run YouTube roast → `/report/6mv1evge`
+   ("Your Watch History Is A LinkedIn Post That Never Ends", score 20) — a real generation from
+   real account data. No consent screen appeared for the test account (consent was granted
+   previously); a fresh account will see it, which is what the demo video needs.
+5. Sign-out returns the home page to the signed-out state.
+6. Fourth click → `3 roasts per hour. Breathe. Try again later.` — rate limit verified in prod.
+
+### Bug found and fixed during the E2E
+
+The first sign-in attempt failed with `Error 401: invalid_client — The OAuth client was not
+found` because the client id sent to Google was wrapped in literal single quotes. `.dev.vars`
+held double-wrapped values from an older wizard run, and the wizard's reader stripped only one
+layer before uploading Worker secrets. Fixed in `scripts/setup-cloudflare.sh`: a new
+`_strip_quotes` helper strips any number of quote layers and now runs in `_read_dotenv`, `ask`,
+`ask_secret`, and `_cf_secret`. The corrected `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` were
+re-uploaded to the Worker.
+
+### Also seen during the E2E
+
+- The Google account chooser shows the app as **"piyushmehta.com"** — the Branding App name has
+  not been set yet. Set it to `RoastTube` before recording the video (reviewers see this name).
+- The signed-in test account (write2pmehta@gmail.com) did not see the unverified-app warning
+  because it had already granted consent; new users will see it until Google approves the app.
+
+### Remaining before submission
+
+1. Branding → set App name `RoastTube` (everything else in section 1 stands as listed).
+2. Publish app to Production in Audience (if not already done).
+3. Demo video (section 2) — use an account that has never granted RoastTube access.
+4. Submit in the Verification Center with the justification in section 3.
