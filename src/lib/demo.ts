@@ -2,7 +2,6 @@ import type { Collected } from "./youtube.ts";
 import type { ChannelLite, VideoLite } from "./types.ts";
 
 const DAY = 86_400_000;
-const HOUR = 3_600_000;
 
 // Deterministic pseudo-random so personas are stable across runs.
 function rng(seed: number) {

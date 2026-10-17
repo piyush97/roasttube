@@ -50,7 +50,7 @@ export const BUCKETS: Record<string, string[]> = {
   news: ["news", "breaking", "politic", "election", "explained", "documentary"],
 };
 
-export function classify(title: string, channelTitle: string, _category: string): string[] {
+export function classify(title: string, channelTitle: string): string[] {
   const hay = `${title} ${channelTitle}`.toLowerCase();
   const hits: string[] = [];
   for (const [bucket, terms] of Object.entries(BUCKETS)) {

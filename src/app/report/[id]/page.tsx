@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getReport } from "@/lib/store";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { RoastStream } from "@/components/RoastStream";
@@ -18,7 +19,7 @@ export default async function ReportPage({
   const stored = await getReport(id);
   if (!stored) notFound();
 
-  const { report, score } = stored;
+  const { report } = stored;
   const today = new Date().toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -31,9 +32,9 @@ export default async function ReportPage({
       <header>
         <div className="flex items-baseline justify-between gap-4 border-b-4 border-[var(--ink)] pb-1">
           <span className="dateline">
-            <a href="/" className="hover:text-[var(--red)]">
+            <Link href="/" className="hover:text-[var(--red)]">
               ← Front page
-            </a>
+            </Link>
           </span>
           <span className="dateline">{today}</span>
           <span className="dateline">

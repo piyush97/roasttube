@@ -3,32 +3,32 @@ import assert from "node:assert/strict";
 import { classify, BUCKETS } from "../src/lib/categories.ts";
 
 test("waking up at 5am is self improvement", () => {
-  const b = classify("I Tried Waking Up at 5AM for 30 Days", "Improvement Pill", "Education");
+  const b = classify("I Tried Waking Up at 5AM for 30 Days", "Improvement Pill");
   assert.ok(b.includes("selfImprovement"), JSON.stringify(b));
 });
 
 test("procrastination video is procrastination", () => {
-  const b = classify("I Procrastinated Watching This For 9 Hours", "Some Guy", "Entertainment");
+  const b = classify("I Procrastinated Watching This For 9 Hours", "Some Guy");
   assert.ok(b.includes("procrastination"), JSON.stringify(b));
 });
 
 test("drama reaction is ragebait", () => {
-  const b = classify("Reacting to the Most Cringe Drama of 2026", "DramaChannel", "Entertainment");
+  const b = classify("Reacting to the Most Cringe Drama of 2026", "DramaChannel");
   assert.ok(b.includes("ragebait"), JSON.stringify(b));
 });
 
 test("shorts marker is shortsCulture", () => {
-  const b = classify("cat falls over #shorts", "CatFails", "Pets & Animals");
+  const b = classify("cat falls over #shorts", "CatFails");
   assert.ok(b.includes("shortsCulture"), JSON.stringify(b));
 });
 
 test("channel name can carry the bucket", () => {
-  const b = classify("Episode 47", "Midnight Podcast", "Film & Animation");
+  const b = classify("Episode 47", "Midnight Podcast");
   assert.ok(b.includes("parasocial"), JSON.stringify(b));
 });
 
 test("unknown input returns empty", () => {
-  assert.deepEqual(classify("Q47", "X", ""), []);
+  assert.deepEqual(classify("Q47", "X"), []);
 });
 
 test("buckets are lowercase substring lists", () => {

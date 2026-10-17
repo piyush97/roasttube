@@ -8,18 +8,17 @@ export function RoastStream({ text }: { text: string }) {
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
       .matches;
-    if (reduced) {
-      setShown(text);
-      return;
-    }
-    setShown("");
+    // All state updates happen inside the timer callback — never synchronously
+    // in the effect body (avoids cascading renders). Reduced motion = one tick.
     let i = 0;
-    const step = Math.max(2, Math.round(text.length / 400));
+    const step = reduced
+      ? text.length
+      : Math.max(2, Math.round(text.length / 400));
     const id = setInterval(() => {
       i += step;
       setShown(text.slice(0, i));
       if (i >= text.length) clearInterval(id);
-    }, 24);
+    }, reduced ? 0 : 24);
     return () => clearInterval(id);
   }, [text]);
 

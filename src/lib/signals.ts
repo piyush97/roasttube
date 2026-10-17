@@ -29,7 +29,7 @@ export function extractSignals(
   const categories: Record<string, number> = {};
   const bucketOf = new Map<string, string[]>();
   for (const v of liked) {
-    const hits = classify(v.title, v.channelTitle, v.category);
+    const hits = classify(v.title, v.channelTitle);
     bucketOf.set(v.id, hits);
     for (const h of hits) categories[h] = (categories[h] ?? 0) + 1;
   }

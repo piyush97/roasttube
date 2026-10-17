@@ -32,6 +32,33 @@ export type Collected = {
 export class QuotaError extends Error {}
 export class WatchHistoryLocked extends Error {}
 
+// Minimal shapes for what we read from YouTube Data API v3 list endpoints.
+type YtItem = {
+  id?: string;
+  snippet?: {
+    title?: string;
+    channelTitle?: string;
+    channelId?: string;
+    publishedAt?: string;
+    categoryId?: string;
+    relatedChannelId?: string;
+    subscriberCount?: string | number;
+    videoOwnerChannelTitle?: string;
+    videoOwnerChannelId?: string;
+  };
+  contentDetails?: {
+    videoId?: string;
+    duration?: string;
+    videoPublishedAt?: string;
+    relatedPlaylists?: { likes?: string; watchLater?: string };
+  };
+};
+
+type YtListResponse = {
+  items?: YtItem[];
+  nextPageToken?: string;
+};
+
 export function durationToSec(iso: string): number {
   // ISO-8601 duration from videos.list; also handles weeks (P#W).
   const m = /^P(?:(\d+)W)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
@@ -52,7 +79,7 @@ async function call(
   token: string,
   spent: { units: number },
   cost: number
-): Promise<any> {
+): Promise<YtListResponse> {
   if (spent.units + cost > QUOTA_BUDGET) {
     throw new QuotaError(
       `Refusing call: projected quota ${spent.units + cost} exceeds budget ${QUOTA_BUDGET}`
@@ -102,7 +129,7 @@ export async function collect(accessToken: string): Promise<Collected> {
   }
 
   // 1 unit each: 4 pages x 50 liked videos
-  const likedItems: any[] = [];
+  const likedItems: YtItem[] = [];
   let pageToken = "";
   for (let page = 0; page < 4; page++) {
     const params: Record<string, string> = {
@@ -133,7 +160,7 @@ export async function collect(accessToken: string): Promise<Collected> {
     );
     for (const v of vids.items ?? []) {
       liked.push({
-        id: v.id,
+        id: v.id ?? "",
         title: v.snippet?.title ?? "",
         channelTitle: v.snippet?.channelTitle ?? "",
         channelId: v.snippet?.channelId ?? "",
@@ -152,7 +179,7 @@ export async function collect(accessToken: string): Promise<Collected> {
     spent,
     1
   );
-  const subs: ChannelLite[] = (subsRes.items ?? []).map((s: any) => ({
+  const subs: ChannelLite[] = (subsRes.items ?? []).map((s) => ({
     id: s.snippet?.relatedChannelId ?? "",
     title: s.snippet?.title ?? "",
     subscriberCount: Number(s.snippet?.subscriberCount ?? 0) || 0,
@@ -167,7 +194,7 @@ export async function collect(accessToken: string): Promise<Collected> {
     1
   );
   const playlistTitles = (plRes.items ?? []).map(
-    (p: any) => p.snippet?.title ?? ""
+    (p) => p.snippet?.title ?? ""
   );
 
   // 1 unit: Watch Later count (titles only, first 50)
