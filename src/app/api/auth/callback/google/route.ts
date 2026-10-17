@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import {
   OAUTH_STATE_COOKIE,
   SESSION_COOKIE,
+  cookieSecure,
   exchangeCode,
   newSessionId,
   putSession,
@@ -36,11 +37,11 @@ export async function GET(req: Request) {
     jar.set(SESSION_COOKIE, id, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: cookieSecure(),
       path: "/",
       maxAge: 3600,
     });
-    return NextResponse.redirect(new URL("/report", req.url));
+    return NextResponse.redirect(new URL("/", req.url));
   } catch (e) {
     console.error("oauth callback failed:", e instanceof Error ? e.message : e);
     return NextResponse.redirect(new URL("/?error=oauth_token", req.url));

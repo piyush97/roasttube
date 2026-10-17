@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { RoastReport, ScoreResult, Signals, StoredReport } from "./types.ts";
@@ -6,9 +7,14 @@ const DIR = join(process.cwd(), "data", "reports");
 
 const ID_RE = /^[a-z0-9]{8}$/;
 
+const ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+
 function newId(): string {
-  // 8-char base36, collision-checked by caller via existsSync-free retry loop
-  return Math.random().toString(36).slice(2, 10).padEnd(8, "0");
+  // crypto, not Math.random: report IDs guard private roast data
+  const b = randomBytes(8);
+  let s = "";
+  for (let i = 0; i < 8; i++) s += ID_ALPHABET[b[i] % 36];
+  return s;
 }
 
 async function ensureDir() {
@@ -19,25 +25,28 @@ export async function saveReport(
   report: RoastReport,
   signals: Signals,
   score: ScoreResult,
-  source: StoredReport["source"]
+  source: StoredReport["source"],
+  persona?: string
 ): Promise<string> {
   await ensureDir();
+  const stored: Omit<StoredReport, "id"> = {
+    createdAt: new Date().toISOString(),
+    source,
+    persona,
+    report,
+    signals,
+    score,
+  };
+  // wx = create-exclusive: closes the read-then-write collision race
   for (let i = 0; i < 5; i++) {
     const id = newId();
     try {
-      await readFile(join(DIR, `${id}.json`));
-      continue; // exists, retry
-    } catch {
-      const stored: StoredReport = {
-        id,
-        createdAt: new Date().toISOString(),
-        source,
-        report,
-        signals,
-        score,
-      };
-      await writeFile(join(DIR, `${id}.json`), JSON.stringify(stored, null, 2));
+      await writeFile(join(DIR, `${id}.json`), JSON.stringify({ id, ...stored }, null, 2), {
+        flag: "wx",
+      });
       return id;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
     }
   }
   throw new Error("could not allocate report id");

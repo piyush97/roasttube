@@ -1,7 +1,7 @@
 import type { ChannelLite, VideoLite } from "./types.ts";
 
 const API = "https://www.googleapis.com/youtube/v3";
-// Full roast run costs ~9 units; hard-stop before spending more than this.
+// Typical roast run ~9 quota units (worst case ~13); hard-stop before spending more.
 export const QUOTA_BUDGET = 20;
 
 const CATEGORIES: Record<string, string> = {
@@ -97,6 +97,9 @@ export async function collect(accessToken: string): Promise<Collected> {
   if (!mine) throw new Error("No YouTube channel for this account");
   const likedPlaylist = mine.contentDetails?.relatedPlaylists?.likes;
   const watchLaterPlaylist = mine.contentDetails?.relatedPlaylists?.watchLater;
+  if (!likedPlaylist) {
+    throw new Error("No liked-videos playlist on this channel. Make your Likes playlist public (YouTube Studio → Content → Likes → Visibility).");
+  }
 
   // 1 unit each: 4 pages x 50 liked videos
   const likedItems: any[] = [];

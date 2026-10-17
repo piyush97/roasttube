@@ -8,6 +8,12 @@ const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const REDIRECT_PATH = "/api/auth/callback/google";
 
+// Plan: RT_COOKIES=true forces Secure cookies on localhost (browsers treat
+// localhost as a secure context), to exercise the production cookie path.
+export function cookieSecure(): boolean {
+  return process.env.RT_COOKIES === "true" || process.env.NODE_ENV === "production";
+}
+
 export function isOAuthConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
@@ -64,10 +70,13 @@ export async function exchangeCode(code: string, verifier: string): Promise<{
   };
 }
 
-// In-memory only: the raw YouTube token is discarded after collection.
+// In-memory only: token lives until it expires or logout; never persisted to disk.
 const sessions = new Map<string, { token: string; expiresAt: number }>();
 
 export function putSession(id: string, token: string, expiresAt: number) {
+  // prune expired sessions so the Map can't grow unbounded
+  const now = Date.now();
+  for (const [k, s] of sessions) if (s.expiresAt <= now) sessions.delete(k);
   sessions.set(id, { token, expiresAt });
 }
 export function getSession(id: string): { token: string; expiresAt: number } | undefined {

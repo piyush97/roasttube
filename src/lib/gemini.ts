@@ -26,7 +26,7 @@ export async function roast(
     },
   };
 
-  let res!: Response; // assigned on first loop iteration
+  let res: Response | undefined;
   let lastErr = "";
   for (const model of MODELS) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
@@ -45,9 +45,9 @@ export async function roast(
       }
       throw new Error(lastErr); // 4xx other than quota: no point retrying
     }
-    if (res.ok) break;
+    if (res?.ok) break;
   }
-  if (!res.ok) throw new Error(lastErr || "Gemini request failed");
+  if (!res?.ok) throw new Error(lastErr || "Gemini request failed");
 
   const data = await res.json();
   const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;

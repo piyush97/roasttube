@@ -14,21 +14,21 @@ const WINDOW = 3_600_000;
 
 function rateLimited(ip: string): boolean {
   const now = Date.now();
-  const list = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW);
-  if (list.length >= 3) {
-    hits.set(ip, list);
-    return true;
+  // prune stale IPs so the Map can't grow unbounded
+  for (const [k, v] of hits) {
+    const alive = v.filter((t) => now - t < WINDOW);
+    if (alive.length === 0) hits.delete(k);
+    else hits.set(k, alive);
   }
+  const list = hits.get(ip) ?? [];
+  if (list.length >= 3) return true;
   list.push(now);
   hits.set(ip, list);
   return false;
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.nextUrl.searchParams.get("ip") ||
-    "local";
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (rateLimited(ip)) {
     return NextResponse.json(
       { error: "rate_limited", message: "3 roasts per hour. Breathe. Try again later." },
@@ -103,6 +103,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const id = await saveReport(report, signals, score, source);
+  const id = await saveReport(report, signals, score, source, persona);
   return NextResponse.json({ id, report, signals, score, persona });
 }

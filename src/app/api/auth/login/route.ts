@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import {
   OAUTH_STATE_COOKIE,
   buildAuthUrl,
+  cookieSecure,
   isOAuthConfigured,
   newPkce,
 } from "@/lib/oauth";
@@ -21,7 +22,7 @@ export async function GET() {
   jar.set(OAUTH_STATE_COOKIE, JSON.stringify({ state, verifier }), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     path: "/api/auth",
     maxAge: 600,
   });
