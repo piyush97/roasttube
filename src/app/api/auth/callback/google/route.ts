@@ -41,7 +41,7 @@ export async function GET(req: Request) {
       path: "/",
       maxAge: 3600,
     });
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/?run=1", req.url));
   } catch (e) {
     console.error("oauth callback failed:", e instanceof Error ? e.message : e);
     return NextResponse.redirect(new URL("/?error=oauth_token", req.url));

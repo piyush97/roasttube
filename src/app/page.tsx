@@ -13,10 +13,10 @@ export const instant = false;
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; run?: string }>;
 }) {
   await connection(); // dateline is today's date — render per request, not at build
-  const { error } = await searchParams;
+  const { error, run } = await searchParams;
   const jar = await cookies();
   const signedIn = Boolean(getSession(jar.get(SESSION_COOKIE)?.value ?? ""));
   const oauthConfigured = isOAuthConfigured();
@@ -83,6 +83,7 @@ export default async function Home({
         oauthConfigured={oauthConfigured}
         geminiKey={geminiKey}
         signedIn={signedIn}
+        autoRunYouTube={run === "1"}
       />
 
       <footer className="mt-14">

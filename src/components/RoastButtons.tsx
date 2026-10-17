@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const PERSONAS = [
@@ -28,10 +28,12 @@ export function RoastButtons({
   oauthConfigured,
   geminiKey,
   signedIn,
+  autoRunYouTube,
 }: {
   oauthConfigured: boolean;
   geminiKey: boolean;
   signedIn: boolean;
+  autoRunYouTube: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -85,6 +87,12 @@ export function RoastButtons({
       setBusy(null);
     }
   }
+
+  // Landed via /?run=1 straight after Google login — start the roast, don't wait for a click.
+  useEffect(() => {
+    if (autoRunYouTube && signedIn && geminiKey) runYouTube();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mt-10">
