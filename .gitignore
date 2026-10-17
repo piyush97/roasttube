@@ -47,3 +47,8 @@ data/
 /dist/
 .vinext/
 .cloudflare/
+
+# cloudflare local state
+.dev.vars*
+.wrangler/
+/bun.lock
