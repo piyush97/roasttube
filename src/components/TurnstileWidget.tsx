@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from "react";
 
 export type TurnstileHandle = { execute(): Promise<string | null> };
 
@@ -9,10 +16,13 @@ type TurnstileApi = {
     container: HTMLElement,
     options: {
       sitekey: string;
-      size: "invisible";
+      appearance: "interaction-only";
+      execution: "execute";
       callback: (token: string) => void;
       "error-callback": () => void;
       "timeout-callback": () => void;
+      "unsupported-callback": () => void;
+      "before-interactive-callback": () => void;
     }
   ): string;
   execute(id: string): void;
@@ -28,29 +38,57 @@ declare global {
 
 const SCRIPT_ID = "cf-turnstile-script";
 const SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-const EXECUTE_TIMEOUT_MS = 8000;
+const SCRIPT_TIMEOUT_MS = 10000;
+// Turnstile retries failed challenges on its own (default interval 8s), so the
+// token deadline leaves room for one retry. Once a challenge turns interactive,
+// the deadline re-arms so the visitor gets a minute to click.
+const TOKEN_TIMEOUT_MS = 15000;
+const INTERACTIVE_TIMEOUT_MS = 60000;
 
+// Shown when no token was obtained. The persona buttons re-enable right after,
+// so the visitor can retry with one more click instead of hitting a dead end.
+const RETRY_NOTICE =
+  "The bot check did not issue a token. Send the defendant to trial again; the court will retry.";
+
+let scriptPromise: Promise<void> | null = null;
+
+// Loads the Turnstile script lazily on the first token request. A failed load
+// removes its script tag and clears the shared promise so the next click can
+// try again with a fresh element.
 function loadScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.turnstile) return resolve();
+  if (window.turnstile) return Promise.resolve();
+  if (scriptPromise) return scriptPromise;
+  scriptPromise = new Promise<void>((resolve, reject) => {
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("turnstile script failed")));
-      return;
+    const script = existing ?? document.createElement("script");
+    const timer = window.setTimeout(onError, SCRIPT_TIMEOUT_MS);
+    function onLoad() {
+      window.clearTimeout(timer);
+      resolve();
     }
-    const s = document.createElement("script");
-    s.id = SCRIPT_ID;
-    s.src = SCRIPT_URL;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("turnstile script failed"));
-    document.head.appendChild(s);
+    function onError() {
+      window.clearTimeout(timer);
+      script.remove();
+      scriptPromise = null;
+      reject(new Error("turnstile script failed"));
+    }
+    script.addEventListener("load", onLoad, { once: true });
+    script.addEventListener("error", onError, { once: true });
+    if (!existing) {
+      script.id = SCRIPT_ID;
+      script.src = SCRIPT_URL;
+      script.async = true;
+      document.head.appendChild(script);
+    }
   });
+  return scriptPromise;
 }
 
-// Invisible Turnstile widget. execute() resolves a fresh single-use token, or
-// null on error/timeout — the request still goes out and the server decides.
+// Turnstile widget, explicitly rendered, interaction-only: it stays unseen and
+// only shows a challenge when Turnstile asks for one. execute() resolves one
+// single-use token per call, or null when no token could be obtained. A null
+// token still lets the request go out (the server decides) and the notice
+// invites a retry.
 export function TurnstileWidget({
   siteKey,
   ref,
@@ -61,65 +99,120 @@ export function TurnstileWidget({
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const pending = useRef<((token: string | null) => void) | null>(null);
+  const deadline = useRef<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const settle = useCallback((token: string | null) => {
+    if (deadline.current !== null) {
+      window.clearTimeout(deadline.current);
+      deadline.current = null;
+    }
+    const resolve = pending.current;
+    pending.current = null;
+    resolve?.(token);
+  }, []);
+
+  const armDeadline = useCallback(
+    (ms: number) => {
+      if (deadline.current !== null) window.clearTimeout(deadline.current);
+      deadline.current = window.setTimeout(() => {
+        deadline.current = null;
+        if (pending.current) {
+          setNotice(RETRY_NOTICE);
+          settle(null);
+        }
+      }, ms);
+    },
+    [settle]
+  );
 
   useImperativeHandle(
     ref,
     () => ({
-      execute: () => {
+      execute: async () => {
+        const el = container.current;
+        if (!siteKey || !el) return null;
+        setNotice(null);
+        settle(null); // defensive: drop a stale attempt, if any
+        let id = widgetId.current;
+        try {
+          if (!id || !window.turnstile) {
+            await loadScript();
+            const api = window.turnstile;
+            if (!api) throw new Error("turnstile unavailable");
+            id = api.render(el, {
+              sitekey: siteKey,
+              appearance: "interaction-only",
+              execution: "execute",
+              callback: (token) => {
+                setNotice(null);
+                settle(token);
+              },
+              "error-callback": () => {
+                // Turnstile retries by itself; keep waiting until the deadline.
+                setNotice(RETRY_NOTICE);
+              },
+              "timeout-callback": () => {
+                setNotice(RETRY_NOTICE);
+              },
+              "unsupported-callback": () => {
+                setNotice(RETRY_NOTICE);
+                settle(null);
+              },
+              "before-interactive-callback": () => {
+                armDeadline(INTERACTIVE_TIMEOUT_MS);
+              },
+            });
+            widgetId.current = id;
+          }
+        } catch {
+          setNotice(RETRY_NOTICE);
+          return null;
+        }
         const api = window.turnstile;
-        if (!widgetId.current || !api) return Promise.resolve(null);
-        const id = widgetId.current;
-        return new Promise<string | null>((resolve) => {
+        if (!api || !id) {
+          setNotice(RETRY_NOTICE);
+          return null;
+        }
+        const currentId = id;
+        return await new Promise<string | null>((resolve) => {
           pending.current = resolve;
-          api.reset(id);
-          api.execute(id);
-          window.setTimeout(() => {
-            if (pending.current === resolve) {
-              pending.current = null;
-              resolve(null);
-            }
-          }, EXECUTE_TIMEOUT_MS);
+          armDeadline(TOKEN_TIMEOUT_MS);
+          api.reset(currentId);
+          api.execute(currentId);
         });
       },
     }),
-    []
+    [siteKey, settle, armDeadline]
   );
 
   useEffect(() => {
-    if (!siteKey || !container.current) return;
-    let cancelled = false;
-    const el = container.current;
-    loadScript()
-      .then(() => {
-        if (cancelled || widgetId.current || !window.turnstile) return;
-        widgetId.current = window.turnstile.render(el, {
-          sitekey: siteKey,
-          size: "invisible",
-          callback: (token) => {
-            pending.current?.(token);
-            pending.current = null;
-          },
-          "error-callback": () => {
-            pending.current?.(null);
-            pending.current = null;
-          },
-          "timeout-callback": () => {
-            pending.current?.(null);
-            pending.current = null;
-          },
-        });
-      })
-      .catch(() => {
-        // Widget unavailable (offline, blocked): requests go out without a
-        // token and the server decides whether that is acceptable.
-      });
     return () => {
-      cancelled = true;
-      if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
+      settle(null);
+      const api = window.turnstile;
+      if (widgetId.current && api) {
+        try {
+          api.remove(widgetId.current);
+        } catch {
+          // The widget is already gone; nothing left to clean up.
+        }
+      }
       widgetId.current = null;
     };
-  }, [siteKey]);
+  }, [settle]);
 
   if (!siteKey) return null;
-  return <div ref={container} aria-hidden="true" />;
+  return (
+    <>
+      <div ref={container} />
+      {notice && (
+        <p
+          role="status"
+          className="clipping mt-6 border-2 border-[var(--red)] p-4 text-[0.95rem]"
+        >
+          {notice}
+        </p>
+      )}
+    </>
+  );
 }

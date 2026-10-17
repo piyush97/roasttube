@@ -141,8 +141,9 @@ ask_secret() {
 }
 
 # write_env KEY VALUE upserts KEY='VALUE' into ENV_FILE (replaces any existing
-# line) and sets $KEY. Idempotent. Creates ENV_FILE at mode 0600; writes through
-# a symlink and keeps an existing file's mode.
+# line) and sets $KEY. Idempotent. Creates ENV_FILE at mode 0600, writes through
+# a symlink, then chmods it back to 0600 so an existing loose mode cannot leak
+# secrets.
 write_env() {
   local key="$1" value="$2" tmp sq="'\\''"
   [[ -e "$ENV_FILE" ]] || (umask 077 && : > "$ENV_FILE")
@@ -150,6 +151,7 @@ write_env() {
   grep -vE "^${key}=" "$ENV_FILE" > "$tmp" || true
   printf "%s='%s'\n" "$key" "${value//\'/$sq}" >> "$tmp"
   cat "$tmp" > "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
   rm -f "$tmp"
   printf -v "$key" '%s' "$value"
   WRITTEN_ENV+=("$key")
@@ -203,7 +205,7 @@ finish() {
 # the whole file before the first prompt, so an edit mid-run can't break it.
 # ──────────────────────────────────────────────────────────────────────────
 
-# _strip_quotes VALUE — prints VALUE with any layers of wrapping ' or "
+# _strip_quotes VALUE prints VALUE with any layers of wrapping ' or "
 # quotes removed. Values pasted from consoles or written by older wizard
 # runs can arrive double-wrapped (''value''), so strip repeatedly.
 _strip_quotes() {
@@ -217,6 +219,11 @@ _strip_quotes() {
   printf '%s' "$value"
 }
 
+# _is_site_key VALUE returns true when VALUE looks like a real Turnstile site
+# key: 0x followed by 20+ URL-safe characters. It guards the sed write below,
+# so a test key (1x...) or a typo can never reach cloudflare.config.ts.
+_is_site_key() { [[ "$1" =~ ^0x[0-9A-Za-z_-]{20,}$ ]]; }
+
 # _read_dotenv KEY FILE — prints the dotenv-ish value for KEY ('' when missing).
 _read_dotenv() {
   local key="$1" file="$2" line value
@@ -229,21 +236,30 @@ _read_dotenv() {
   printf '%s' "$value"
 }
 
-# _cf_secret NAME VALUE — uploads a Worker secret without echoing the value.
+# _cf_secret NAME VALUE uploads a Worker secret without echoing the value.
+# The value goes through a mode-0600 temp file (`cf workers secrets bulk
+# --secrets @file`) instead of `secrets update --text`, so it never shows up in
+# this machine's process list (argv is readable by other local processes).
 _cf_secret() {
-  local name="$1" value="$2"
+  local name="$1" value="$2" tmp value_json
   value=$(_strip_quotes "$value")
   if [[ -z "$value" ]]; then
-    warn "no value captured for secret $name — skipping"
-    SKIPPED+=("secret $name (cf workers secrets update $name --type secret_text --worker roasttube)")
+    warn "no value captured for secret $name; skipping"
+    SKIPPED+=("secret $name (re-run this wizard to upload it)")
     return 0
   fi
-  if cf workers secrets update "$name" --type secret_text --text "$value" --worker roasttube >/dev/null; then
+  tmp=$(mktemp)
+  chmod 600 "$tmp"
+  value_json=${value//\\/\\\\}
+  value_json=${value_json//\"/\\\"}
+  printf '{"%s":{"name":"%s","type":"secret_text","text":"%s"}}' "$name" "$name" "$value_json" > "$tmp"
+  if ( trap 'rm -f "$tmp"' EXIT; cf workers secrets bulk --secrets "@$tmp" --worker roasttube ) >/dev/null; then
     printf '  %s✓%s uploaded secret %s\n' "$GREEN" "$RESET" "$name"
   else
-    warn "couldn't upload $name yet — retry later: cf workers secrets update $name --type secret_text --worker roasttube"
-    SKIPPED+=("secret $name (cf workers secrets update $name --type secret_text --worker roasttube)")
+    warn "couldn't upload $name yet; retry later by re-running this wizard"
+    SKIPPED+=("secret $name (re-run this wizard to upload it)")
   fi
+  rm -f "$tmp"
 }
 
 run_wizard() {
@@ -316,18 +332,35 @@ write_env NEXT_PUBLIC_APP_URL "http://localhost:3001"
 
 # ── 4. Turnstile widget (optional) ────────────────────────────────────────
 stage "Turnstile widget (production keys)"
-say "Skip this for the workers.dev smoke test — the test keypair already always passes."
+say "Skip this for the workers.dev smoke test; the test keypair already always passes."
 say "Do it now (or on a later re-run) to wire the real production widget."
 if confirm "Create/register the production Turnstile widget now"; then
   open_url "https://dash.cloudflare.com/?to=/:account/turnstile"
-  step "Add widget → name 'roasttube' → hostnames: roasttube.piyushmehta.com → widget mode: Invisible."
+  step "Add widget → name 'roasttube' → hostnames: roasttube.piyushmehta.com → widget mode: Managed."
+  note "the site requests tokens explicitly and shows the widget only when a challenge needs a click"
   step "Copy the Site Key (public) and the Secret Key (once shown)."
   ask TURNSTILE_SITE_KEY "Paste the production Site Key:"
-  ask_secret TURNSTILE_SECRET_KEY "Paste the production Secret Key:"
-  TURNSTILE_PROD=1
-  sed -i.bak -E "s/(TURNSTILE_SITE_KEY: bindings\.text\(\")[^\"]*(\"\))/\1${TURNSTILE_SITE_KEY}\2/" cloudflare.config.ts \
-    && rm -f cloudflare.config.ts.bak
-  note "cloudflare.config.ts now ships the production site key (verified in the next deploy)"
+  while ! _is_site_key "$TURNSTILE_SITE_KEY"; do
+    warn "that does not look like a Turnstile site key (0x, then 20+ letters, digits, _ or -)"
+    if ! ask TURNSTILE_SITE_KEY "Paste the production Site Key again:"; then
+      warn "no production site key captured; leaving the test key in place for now"
+      SKIPPED+=("production Turnstile keys (re-run this wizard when the domain is live)")
+      TURNSTILE_SITE_KEY=""
+      break
+    fi
+  done
+  if _is_site_key "$TURNSTILE_SITE_KEY"; then
+    ask_secret TURNSTILE_SECRET_KEY "Paste the production Secret Key:"
+    TURNSTILE_PROD=1
+    # Escape sed replacement metacharacters (\ & |) even though the validation
+    # above already restricts the key to URL-safe characters.
+    SITE_KEY_SED=${TURNSTILE_SITE_KEY//\\/\\\\}
+    SITE_KEY_SED=${SITE_KEY_SED//&/\\&}
+    SITE_KEY_SED=${SITE_KEY_SED//|/\\|}
+    sed -i.bak -E "s/(TURNSTILE_SITE_KEY: bindings\.text\(\")[^\"]*(\"\))/\1${SITE_KEY_SED}\2/" cloudflare.config.ts \
+      && rm -f cloudflare.config.ts.bak
+    note "cloudflare.config.ts now ships the production site key (verified in the next deploy)"
+  fi
 else
   SKIPPED+=("production Turnstile keys (re-run this wizard when the domain is live)")
 fi
@@ -374,11 +407,9 @@ _cf_secret GOOGLE_CLIENT_SECRET "${GOOGLE_CLIENT_SECRET:-}"
 _cf_secret SESSION_SECRET "${SESSION_SECRET:-}"
 if [[ "${TURNSTILE_PROD:-0}" == "1" ]]; then
   _cf_secret TURNSTILE_SECRET_KEY "${TURNSTILE_SECRET_KEY:-}"
-elif grep -q "1x00000000000000000000AA" cloudflare.config.ts; then
-  _cf_secret TURNSTILE_SECRET_KEY "1x0000000000000000000000000000000AA"
 else
-  note "config carries a production site key; leaving TURNSTILE_SECRET_KEY as-is"
-  note "(re-run the Turnstile stage if you rotate the widget secret)"
+  note "no production widget registered this run; leaving TURNSTILE_SECRET_KEY as-is"
+  note "(re-run the Turnstile stage when you register the real widget)"
 fi
 
 # ── 7. Deploy again ───────────────────────────────────────────────────────

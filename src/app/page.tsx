@@ -48,6 +48,9 @@ export default async function Home({
           <span className="text-[var(--red)]">WE DID THE MATH.</span>
         </h2>
         <p className="mt-6 max-w-2xl text-lg leading-7">
+          {"RoastTube is a free entertainment site that reads your YouTube likes, subscriptions and playlists (with your permission), scores them, and has an AI model write a comedy roast you can share."}
+        </p>
+        <p className="mt-4 max-w-2xl text-lg leading-7">
           A court of one, jury of one, found you guilty on all counts of taste.
           RoastTube pulls what you{" "}
           <em>chose to care about</em> — your liked videos, subscriptions and
@@ -59,6 +62,9 @@ export default async function Home({
           we don&apos;t pretend to. We only prosecute what you already made
           public with a thumbs. Your token is discarded the moment the evidence
           is collected.
+        </p>
+        <p className="mt-6 max-w-2xl border-y-2 border-[var(--ink)] py-3 text-[0.95rem] leading-6">
+          {"1. Sign in with Google (read-only). 2. We read your likes, subscriptions and playlist titles, and compute your Brain Rot Score. 3. The AI writes the roast; the token is discarded."}
         </p>
       </section>
 

@@ -18,9 +18,11 @@ export default defineConfig({
       ASSETS: bindings.assets(),
       ROASTTUBE_KV: bindings.kv(),
       // Vars are versioned constants per deploy. The Turnstile site key is
-      // public (it ships in the HTML); the test key below always passes, so
-      // swap it for the real widget key (scripts/setup-cloudflare.sh does
-      // this) once the domain is live.
+      // public (it ships in the HTML); the test key below always passes and is
+      // for local and smoke runs only. scripts/setup-cloudflare.sh validates a
+      // real widget key (0x + 20 URL-safe chars) and swaps it in at deploy
+      // time; the matching secret is uploaded only after that swap, so the
+      // always-pass test secret can never ship.
       NEXT_PUBLIC_APP_URL: bindings.text("https://roasttube.piyushmehta.com"),
       TURNSTILE_SITE_KEY: bindings.text("1x00000000000000000000AA"),
       DAILY_ROAST_BUDGET: bindings.text("15"),

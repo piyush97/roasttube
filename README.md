@@ -56,7 +56,7 @@ Three fabricated defendants ship in the repo (The Lurker, The Gremlin, The Essay
 
 ```bash
 npm install
-cp .env.example .env.local   # paste your GEMINI_API_KEY
+install -m 600 .env.example .env.local   # paste your GEMINI_API_KEY
 npm run dev
 ```
 
@@ -98,7 +98,7 @@ Free-tier caveats: Workers allows 100k requests a day on the free plan; the demo
 | `NEXT_PUBLIC_APP_URL` | no | Base URL, defaults to `http://localhost:3000`. |
 | `RT_COOKIES` | no | `true` forces Secure cookies on localhost to exercise the production cookie path. |
 | `SESSION_SECRET` | hosted | Seals the session cookie. The Cloudflare wizard generates one. |
-| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | hosted | Cloudflare Turnstile keys for the demo button. Localhost uses the always-pass test pair. |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | hosted | Cloudflare Turnstile keys for the demo button. Localhost uses the always-pass test pair. Dual-file drift: the wizard writes the pair to `.dev.vars` only, which is what `vinext dev` reads; `next dev` reads `.env.local`, so there the widget is absent and the server skips verification. |
 | `DAILY_ROAST_BUDGET` | no | Roasts per day cap in production, 15 by default. |
 
 ## How it works
