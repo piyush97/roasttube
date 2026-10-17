@@ -70,6 +70,13 @@ test("system prompt forbids invention and advice", () => {
   assert.ok(sys.toLowerCase().includes("no advice"));
 });
 
+test("system prompt carries the humanizer rules", () => {
+  const sys = buildSystemPrompt();
+  assert.ok(sys.includes("no em dashes"));
+  assert.ok(sys.toLowerCase().includes("banned constructions"));
+  assert.ok(sys.toLowerCase().includes("banned words"));
+});
+
 test("ROAST_SCHEMA requires all 9 report fields", () => {
   assert.equal(ROAST_SCHEMA.required.length, 9);
   for (const f of [

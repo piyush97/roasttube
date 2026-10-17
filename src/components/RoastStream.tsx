@@ -24,7 +24,9 @@ export function RoastStream({ text }: { text: string }) {
 
   return (
     <div className="text-[1.06rem] leading-7 [&>p]:mb-4 [&>p:last-child]:mb-0">
-      {shown.split("\n\n").map((p, i) => (
+      {shown
+        .split(/\n\s*\n|\s*\bParagraph\s+\d+\s*:\s*/i)
+        .map((p, i) => (
         <p key={i} className={i === 0 ? "first-letter:float-left first-letter:mr-2 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.8]" : ""}>
           {p}
         </p>

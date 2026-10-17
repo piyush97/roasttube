@@ -7,6 +7,37 @@ const MODELS = [process.env.GEMINI_MODEL ?? "gemini-3.5-flash", "gemini-flash-li
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Gemini sometimes writes literal "Paragraph 2:" labels inline instead of
+// paragraph breaks. Convert them to real breaks so the tabloid columns render.
+export function normalizeParagraphs(text: string): string {
+  return text
+    .replace(/\s*\bParagraph\s+\d+\s*:\s*/gi, "\n\n")
+    .replace(/([^\n])\n(?!\n)/g, "$1\n\n") // single newline = intended paragraph break
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// Em/en dashes are the strongest AI-writing tell. Swap them for commas or a
+// sentence break; number ranges keep a plain hyphen. Prompt rules ask the
+// model to avoid them already, this guarantees it.
+export function stripAiDashes(text: string): string {
+  return text.replace(
+    /[ \t]*[—–][ \t]*/g,
+    (_m: string, offset: number, whole: string) => {
+      const before = whole.slice(0, offset).replace(/[ \t]+$/, "").at(-1) ?? "";
+      const after = whole[offset + _m.length] ?? "";
+      if (before === "" || before === "\n") return "";
+      if (/[0-9]/.test(before) && /[0-9]/.test(after)) return "-";
+      if (/[.!?]/.test(before)) return " ";
+      return /\p{Lu}/u.test(after) ? ". " : ", ";
+    }
+  );
+}
+
+function cleanOne(text: string): string {
+  return stripAiDashes(normalizeParagraphs(text));
+}
+
 export async function roast(
   s: Signals,
   r: ScoreResult
@@ -61,6 +92,16 @@ export async function roast(
   }
 
   const report = JSON.parse(text) as RoastReport;
+  report.headline = cleanOne(report.headline);
+  report.roastReport = cleanOne(report.roastReport);
+  report.redFlags = report.redFlags.map(cleanOne);
+  report.personality = cleanOne(report.personality);
+  report.existentialQuestion = cleanOne(report.existentialQuestion);
+  report.shareCardLine = cleanOne(report.shareCardLine);
+  report.channelRoasts = report.channelRoasts.map((c) => ({
+    ...c,
+    roast: cleanOne(c.roast),
+  }));
   // Hard-compute wins over model self-report.
   report.brainrotScore = r.score;
   report.brainrotTier = r.tier;
