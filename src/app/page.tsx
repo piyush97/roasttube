@@ -67,7 +67,7 @@ export default async function Home({
           className="clipping mt-8 border-2 border-[var(--red)] p-4 text-[0.95rem]"
         >
           {error === "oauth_state"
-            ? "Login attempt expired or collided with another one. Open http://localhost:3000 and click Roast my YouTube again."
+            ? "Login attempt expired or collided with another one. Open the front page and click Roast my YouTube again."
             : error === "oauth_token"
               ? "Google accepted the login but refused to hand over a token. Check GOOGLE_CLIENT_SECRET and that the YouTube Data API v3 is enabled in your Google Cloud project."
               : "Google refused the login. Either you cancelled, or your Google account is not added as a Test User (OAuth consent screen → Test users). Try again and watch for a Google error page."}
@@ -85,8 +85,8 @@ export default async function Home({
       <footer className="mt-14">
         <div className="rule-thick" />
         <p className="dateline mt-3 text-center">
-          RoastTube — entertainment, barely. Runs entirely on your machine.
-          Reports live in ./data/reports; delete the folder, evidence gone.
+          RoastTube — entertainment, barely. Roasts are stored so links keep
+          working; sign-in tokens are dropped once the evidence is collected.
         </p>
       </footer>
     </main>

@@ -74,9 +74,9 @@ export function RoastButtons({
   }
 
   const demoDisabled = !geminiKey;
-  const demoReason = "Needs GEMINI_API_KEY in .env.local — the roast engine runs on Gemini.";
+  const demoReason = "Needs GEMINI_API_KEY — the roast engine runs on Gemini.";
   const oauthReason =
-    "Needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env.local. Until then, the demo cases below are fully admissible.";
+    "Needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET. Until then, the demo cases below are fully admissible.";
 
   async function runYouTube() {
     setBusy("youtube");
