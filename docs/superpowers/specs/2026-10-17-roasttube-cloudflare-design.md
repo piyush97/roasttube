@@ -1,6 +1,6 @@
 # RoastTube on Cloudflare Workers — design
 
-Date: 2026-10-17 · Status: awaiting approval · Follows the local-app build (docs/superpowers/plans/2026-10-16-roasttube.md)
+Date: 2026-10-17 · Status: approved · Follows the local-app build (docs/superpowers/plans/2026-10-16-roasttube.md)
 
 ## Intent
 
@@ -28,7 +28,8 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 
 - Cloudflare docs recommend **vinext** (their Vite-based Next.js runtime) for new Next.js deployments; OpenNext is documented as the maintenance path for existing OpenNext apps. Both support Next 16 features. (developers.cloudflare.com, pages fetched today; OpenNext page updated Oct 12, vinext page Aug 25.)
 - `vinext check` on this repo: **92% compatible, 0 hard issues.** Partials: `cacheComponents` ("experimental, incomplete"), turbopack `rules` ignored under Vite (Tailwind handled differently there).
-- `wrangler` 4.124.0 is installed and authenticated (me@piyushmehta.com, account 038769a528a64af1b4207aa46960c248).
+- `wrangler` 4.124.0 is installed and authenticated (me@piyushmehta.com, account 038769a528a64af1b4207aa46960c248). The vinext deploy path itself uses the **`cf` CLI** (one `cf auth login` browser click) with a typed `cloudflare.config.ts`; KV namespaces auto-provision on deployment (docs fetched 2026-10-17).
+- Workers `nodejs_compat` + compat date ≥ 2025-04-01 auto-populate `process.env` from configured vars and secrets, so the app's existing `process.env` reads keep working on Workers; only non-string bindings (KV) need `import { env } from "cloudflare:workers"`.
 - piyushmehta.com nameservers are Cloudflare; zone-to-account membership gets confirmed at deploy time.
 - GitHub repo `piyush97/roasttube`: description + topics updated today; visibility still private; homepage gets set after the first successful deploy.
 
@@ -48,11 +49,11 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 
 ### 1. Runtime and build path
 
-- `vinext init` (non-destructive) adds the Vite config, `dev:vinext` / `build:vinext` scripts, and the Workers config. `npm run dev` (next dev) and the existing `next build` / `next start` local-prod flow keep working.
+- `vinext init --platform=cloudflare` (non-destructive) adds `vite.config.ts` + `cloudflare.config.ts` and the scripts `dev:vinext` / `build:vinext` / `preview` / `deploy:vinext`; `npm run dev` (next dev) and the existing `next build` / `next start` local-prod flow keep working. Init prompts: **no persistent cache**, image optimization off.
 - **Drop `cacheComponents` + `partialPrefetching`** from next.config and the related `instant = false` / `connection()` lines. Two of the only three compat partials disappear, and nothing is lost: under classic Next rules both routes render per request anyway (`/` reads cookies; `/report/[id]` has no `generateStaticParams`), so `next build` must show `ƒ (Dynamic)` for both. If it disagrees, `export const dynamic = "force-dynamic"` is the fallback per route. Freshness (today's dateline, live report reads) is re-verified under `vinext dev`/`preview` in the spike.
-- Tailwind works in both builds: keep the current turbopack CSS loader for `next dev`, add the official `@tailwindcss/vite` plugin for the Vite/vinext build. (Exact wiring during the spike.)
+- Tailwind works in both builds: keep the turbopack CSS loader rule for `next dev`, add the official `@tailwindcss/vite` plugin for the Vite/vinext build. No postcss config exists in the repo, so there is nothing to conflict. (Exact wiring during the spike.)
 - `next/font/google` is supported by vinext (self-hosted with fallbacks). No change expected.
-- `nodejs_compat` compatibility flag + compat date 2026-10-17 in the Workers config (code uses `node:crypto`). Prefer WebCrypto where trivial.
+- `nodejs_compat` compatibility flag + compat date 2026-10-17 in the Workers config (code uses `node:crypto`). With that combo Workers auto-populate `process.env` from vars + secrets, so existing env reads keep working as-is. Prefer WebCrypto where trivial, and keep secrets out of `NEXT_PUBLIC_*`.
 
 ### 2. Report storage: Workers KV (with filesystem fallback)
 
@@ -82,22 +83,25 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 5. Generate → save report → for demos also write the cache key.
 
 - KV counters are eventually consistent; small overshoot is acceptable and covered by the margin (budget 15 vs quota ~20). No Durable Objects.
-- Local (no binding): in-process Map equivalents with the same shapes, committed as small fallbacks; node tests use fakes with injectable clocks.
+- Local (no binding): a process-local `MapKv` implementing the same KV-like interface, so the limiter, budget, and demo-cache code paths are identical in dev and prod; node tests use fresh `MapKv` instances with injectable clocks.
 
 ### 5. Free-plan tactics
 
-- Report pages are immutable once written: give them a modest `Cache-Control` / vinext ISR cache (builder verifies the exact mechanism in the spike; `export const revalidate` is the candidate) so repeat views don't re-render in the Worker.
+- Report pages are immutable once written, but render per request by default (vinext's simplest mode: no persistent cache). If observability shows CPU pressure on report views, the documented escalation is the KV data cache: `kvDataAdapter()` in `vite.config.ts`, `VINEXT_KV_CACHE: bindings.kv()` in the Worker config, plus `generateStaticParams` returning `[]` and `revalidate` on the page. Not built unless the tail shows pressure.
 - Home page and roast route stay uncached.
 - Set `observability.enabled` in the Workers config to watch CPU time, and check `wrangler tail` during smoke tests. If 10ms CPU is exceeded, options in order: cache more, trim render work, simplify the roast route's JSON handling.
 
 ### 6. Deploy mechanics and environment
 
-- `wrangler.jsonc`: worker `roasttube`, KV binding, `routes = [{ pattern: "roasttube.piyushmehta.com", custom_domain: true }]`, vars (`NEXT_PUBLIC_APP_URL=https://roasttube.piyushmehta.com`, `DAILY_ROAST_BUDGET=15`), `nodejs_compat`, observability.
-- Secrets (via `wrangler secret put`, wizard script automates from `.env.local` where possible): `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` (new, generated), `TURNSTILE_SECRET_KEY`. Public var: `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. `GEMINI_MODEL` stays unset in prod (default + lite fallback apply); it remains a documented optional override in `.env.example`.
-- `NEXT_PUBLIC_*` values must exist at build time; the spike confirms how vinext surfaces env (`.env.local` vs vars vs `.dev.vars`) and the deploy script sets what the build needs.
+- `cloudflare.config.ts` (generated by init, then edited): worker `roasttube`, `compatibilityDate: "2026-10-17"`, `compatibilityFlags: ["nodejs_compat"]`, observability enabled, custom domain via `domains: ["roasttube.piyushmehta.com"]`. Bindings under `worker.env`:
+  - `ROASTTUBE_KV: bindings.kv()` — namespace auto-provisions on deploy
+  - vars via `bindings.text()`: `NEXT_PUBLIC_APP_URL=https://roasttube.piyushmehta.com`, `TURNSTILE_SITE_KEY`, `DAILY_ROAST_BUDGET=15`
+  - secrets via `bindings.secret()`: `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` (generated), `TURNSTILE_SECRET_KEY`
+- Auth + secrets: `cf auth login` (one browser click; the wizard runs it); secret values upload with `cf workers secrets update` from `.env.local` plus a generated `SESSION_SECRET`. Local Workers dev reads `.dev.vars`; plain `next dev` keeps reading `.env.local`. Both stay gitignored. `GEMINI_MODEL` stays unset in prod (default + lite fallback apply); it remains a documented optional override in `.env.example`.
+- The Turnstile site key reaches the client as a server prop (`process.env.TURNSTILE_SITE_KEY` read on the server), not through build-time client env inlining.
 - Google console (human step, wizard): add `https://roasttube.piyushmehta.com/api/auth/callback/google` to the OAuth client's redirect URIs. Localhost URI stays.
-- `scripts/setup-cloudflare.sh` (wizard-style, generated with the wizard skill): creates the KV namespace, uploads secrets, checks the zone, walks the Google console step, runs the first deploy.
-- `.workers.dev` URL is the fallback if the custom domain attach fails on zone-account mismatch; the OAuth redirect for that URL is added at that point if needed.
+- `scripts/setup-cloudflare.sh` (wizard-style, generated with the wizard skill): checks the zone, runs `cf auth login`, writes `.dev.vars`, generates + uploads secrets, walks the Google console step, creates the Turnstile widget, runs the first deploy (`npx @vinext/cloudflare deploy`).
+- Deploy order: workers.dev first (smoke), then the `domains` entry for the custom domain, then the full E2E list. If a zone-account mismatch blocks the domain attach, the workers.dev URL carries smoke tests until fixed.
 - E2E on the live site with the browser (bsk): home renders, demo roast works, second click within 1h returns the **same** report id (cache proof), report page + share card render, rate-limit and budget messages appear when forced locally with a temporary low cap, login round-trip works with the new redirect URI.
 
 ### 7. Repo, metadata, and copy truth
@@ -113,7 +117,7 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 
 ## Files expected to change
 
-- `package.json` (scripts, vinext/Vite/Tailwind-Vite deps), `vite.config.ts`, `wrangler.jsonc` (new), `next.config.ts` (drop cacheComponents/partialPrefetching).
+- `package.json` (scripts, vinext/Vite/Tailwind-Vite deps), `vite.config.ts` + `cloudflare.config.ts` (init-generated), `next.config.ts` (drop cacheComponents/partialPrefetching).
 - `src/lib/store.ts` → selector + `store-fs.ts` + `store-kv.ts`; new `src/lib/kv.ts` (binding accessor, limiter, budget, demo cache; all pure over a KV-like interface).
 - `src/lib/oauth.ts` (sealed cookie; delete session Map), callback + logout routes, `src/app/api/roast/route.ts` (checks + headers), `src/app/page.tsx` (copy, URL), `RoastButtons.tsx` + new `TurnstileWidget.tsx`, report page (caching export only).
 - Tests: `tests/helpers/fake-kv.ts`; new suites for sealing, KV store, limiter, budget, demo cache.
@@ -130,9 +134,10 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 
 | Risk | Mitigation |
 |------|------------|
-| Binding access mechanics under plain `next dev` (Workers-only module) | Spike step 0 before any refactor; leading approach: runtime selector with the binding import isolated in `store-kv.ts` / `kv.ts`; fallback: small build-time switch. |
+| Binding access mechanics under plain `next dev` (Workers-only module) | Spike step 0 before any refactor; approach: `kv.ts` loads `cloudflare:workers` through a non-analyzable dynamic import inside try/catch (null under plain Next, binding under Workers), verified for `next build`, `next dev`, `vite dev`, `vite preview`; fallback if the dynamic import fails in workerd: platform-split module via Vite resolve conditions. |
 | vinext beta quirks beyond the compat report | Spike exercises dev + build + binding + Tailwind + fonts before the refactor; OpenNext adapter is the documented fallback. |
-| Env flow differences (.env.local vs wrangler vars vs .dev.vars) | Spike confirms; deploy script sets what the build needs; documented in README. |
+| Env flow differences between runtimes | Resolved by platform behavior: `nodejs_compat` + compat date 2026-10-17 populate `process.env` on Workers from vars/secrets; `.dev.vars` serves Vite dev, `.env.local` serves `next dev`. Spike confirms both with a real Gemini call. |
+| `cf` CLI is not authenticated on this machine yet | Wizard runs `cf auth login` (one browser click); `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` are the headless alternative. |
 | KV eventual consistency on counters | Limits are soft by design; margins absorb overshoot. |
 | Free-plan 10ms CPU | Lean pages, report caching, observability from day one; escalation path above. |
 | Turnstile adds client weight / friction | Demo path only, invisible mode, skipped entirely when keys absent; signed-in roasts rely on the Google allowlist instead. |
@@ -140,4 +145,4 @@ The public experience: three demo personas anyone can roast instantly, and Googl
 
 ## Left to the builder
 
-Exact import mechanics for KV access (spike outcome), Tailwind-Vite wiring details, Turnstile widget provisioning route (API vs dashboard), ISR/cache mechanism for report pages, wording for new copy, and CPU tuning if smoke shows pressure. Everything else above is decided.
+Exact dynamic-import mechanics for KV access (spike outcome), Tailwind-Vite wiring details, Turnstile widget provisioning route (API vs dashboard), wording for new copy, and CPU tuning if smoke shows pressure. Everything else above is decided.
