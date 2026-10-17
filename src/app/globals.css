@@ -99,6 +99,21 @@ a {
   box-shadow: 2px 3px 8px rgba(26, 22, 19, 0.16);
 }
 
+/* case number: true small caps rather than the dateline's full uppercase */
+.case-no {
+  text-transform: none;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.08em;
+}
+
+/* WCAG 2.5.8 AA: utility links keep a >=24px touch target */
+.link-tap {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding-inline: 0.5rem;
+}
+
 /* one authored moment: the verdict stamp slams down */
 @keyframes slam {
   0% {

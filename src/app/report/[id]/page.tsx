@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getReport } from "@/lib/store";
@@ -7,12 +8,45 @@ import { RedFlagCard } from "@/components/RedFlagCard";
 import { ChannelRoasts } from "@/components/ChannelRoasts";
 import { ShareCard } from "@/components/ShareCard";
 
-export default async function ReportPage({
+const CTA_HREF = "/?run=1";
+
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const stored = await getReport(id);
+  if (!stored) return {};
+  const { report } = stored;
+  const description = `Brain Rot Score ${report.brainrotScore}/100, ${report.brainrotTier}`;
+  return {
+    title: report.headline,
+    description,
+    alternates: { canonical: `/report/${id}` },
+    openGraph: {
+      type: "article",
+      title: report.headline,
+      description,
+      url: `/report/${id}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: report.headline,
+      description,
+    },
+  };
+}
+
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const fresh = (await searchParams).fresh === "1";
   const stored = await getReport(id);
   if (!stored) notFound();
 
@@ -33,7 +67,7 @@ export default async function ReportPage({
               ← Front page
             </Link>
           </span>
-          <span className="dateline">{today}</span>
+          <span className="dateline hidden sm:inline">{today}</span>
           <span className="dateline">
             {stored.source === "demo" ? "Special demo edition" : "Exclusive"}
           </span>
@@ -53,9 +87,8 @@ export default async function ReportPage({
       <h2 className="headline mt-6 text-center text-[2.2rem] leading-[1] sm:text-6xl">
         {report.headline}
       </h2>
-      <p className="dateline mt-3 text-center">
-        Our correspondent was present for all of it and is legally required not
-        to comment
+      <p className="mx-auto mt-3 max-w-2xl text-balance text-[1.06rem] italic leading-6 text-ink-soft sm:text-[1.18rem] sm:leading-7">
+        {report.shareCardLine}
       </p>
 
       <section className="mt-10">
@@ -64,8 +97,8 @@ export default async function ReportPage({
 
       <section className="mt-12">
         <div className="rule-thick" />
-        <div className="mt-6 text-justify md:columns-2 md:gap-10">
-          <RoastStream text={report.roastReport} />
+        <div className="mt-6 md:columns-2 md:gap-10 md:text-justify">
+          <RoastStream text={report.roastReport} fresh={fresh} />
         </div>
       </section>
 
@@ -73,9 +106,14 @@ export default async function ReportPage({
         <section className="mt-14">
           <h2 className="masthead text-4xl">Red flags, plural</h2>
           <div className="rule-double mt-2 mb-6" />
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="flex flex-wrap justify-center gap-6">
             {report.redFlags.map((flag, i) => (
-              <RedFlagCard key={i} flag={flag} index={i} />
+              <div
+                key={i}
+                className="w-full sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
+              >
+                <RedFlagCard flag={flag} index={i} />
+              </div>
             ))}
           </div>
         </section>
@@ -112,20 +150,40 @@ export default async function ReportPage({
           score={report.brainrotScore}
           tier={report.brainrotTier}
         />
+        <p className="mt-6 text-center">
+          <Link
+            href={CTA_HREF}
+            className="inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 font-display text-xl uppercase tracking-wide text-[var(--paper)] transition-transform hover:-translate-y-0.5"
+          >
+            Get your own verdict
+          </Link>
+        </p>
       </section>
 
       <footer className="mt-14">
         <div className="rule-thick" />
         <p className="dateline mt-3 text-center">
-          Case no. {stored.id} — filed {new Date(stored.createdAt).toUTCString()}
-          {stored.source === "demo" ? " · fabricated defendant, real math" : ""}
+          <span className="case-no">Case no. {stored.id}</span>
+          {" · filed "}
+          {new Date(stored.createdAt).toUTCString()}
+          {stored.source === "demo"
+            ? " · fabricated defendant, real math"
+            : ""}
         </p>
-        <p className="dateline mt-2 text-center">
-          <Link className="underline" href="/privacy">
+        <p className="mt-6 text-center">
+          <Link
+            href={CTA_HREF}
+            className="inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 font-display text-xl uppercase tracking-wide text-[var(--paper)] transition-transform hover:-translate-y-0.5"
+          >
+            Get your own verdict
+          </Link>
+        </p>
+        <p className="dateline mt-4 text-center">
+          <Link className="link-tap underline" href="/privacy">
             Privacy
           </Link>
           {" · "}
-          <Link className="underline" href="/terms">
+          <Link className="link-tap underline" href="/terms">
             Terms
           </Link>
         </p>
