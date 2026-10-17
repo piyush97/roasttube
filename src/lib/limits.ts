@@ -77,6 +77,29 @@ export async function cacheDemoReportId(
   await kv.put(DEMO_CACHE_PREFIX + persona, id, { expirationTtl: DEMO_CACHE_TTL_SECONDS });
 }
 
+// Per-user report cache: channel id -> report id, one day. Same shape as the
+// demo cache; consumed by the route so a returning signer sees their last
+// verdict instead of burning a generation.
+export const USER_CACHE_TTL_SECONDS = 86_400;
+const USER_CACHE_PREFIX = "user-cache:";
+
+export async function getCachedUserReportId(
+  kv: KvLike,
+  channelId: string
+): Promise<string | null> {
+  return kv.get(USER_CACHE_PREFIX + channelId);
+}
+
+export async function cacheUserReportId(
+  kv: KvLike,
+  channelId: string,
+  reportId: string
+): Promise<void> {
+  await kv.put(USER_CACHE_PREFIX + channelId, reportId, {
+    expirationTtl: USER_CACHE_TTL_SECONDS,
+  });
+}
+
 export function dailyBudgetCap(env: Record<string, string | undefined> = process.env): number {
   const parsed = Number.parseInt(env.DAILY_ROAST_BUDGET ?? "", 10);
   if (!Number.isFinite(parsed)) return DAILY_BUDGET_DEFAULT;

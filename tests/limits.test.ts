@@ -4,10 +4,13 @@ import { MapKv } from "../src/lib/kv.ts";
 import {
   RATE_LIMIT_PER_HOUR,
   DAILY_BUDGET_DEFAULT,
+  USER_CACHE_TTL_SECONDS,
   cacheDemoReportId,
+  cacheUserReportId,
   consumeBudget,
   dailyBudgetCap,
   getCachedDemoReportId,
+  getCachedUserReportId,
   ipRateLimited,
 } from "../src/lib/limits.ts";
 
@@ -78,4 +81,27 @@ test("demo cache stores per persona and expires after an hour", async () => {
   assert.equal(await getCachedDemoReportId(kv, "gremlin"), null);
   t += 3_601_000;
   assert.equal(await getCachedDemoReportId(kv, "lurker"), null);
+});
+
+test("user cache round-trips and stays isolated per channel", async () => {
+  let t = 2_000_000;
+  const kv = new MapKv(() => t);
+  assert.equal(await getCachedUserReportId(kv, "UC_aaa"), null);
+  await cacheUserReportId(kv, "UC_aaa", "rep1111");
+  assert.equal(await getCachedUserReportId(kv, "UC_aaa"), "rep1111");
+  assert.equal(await getCachedUserReportId(kv, "UC_bbb"), null);
+});
+
+test("user cache expires at the 86400s boundary, not before", async () => {
+  let t = 2_000_000;
+  const kv = new MapKv(() => t);
+  await cacheUserReportId(kv, "UC_aaa", "rep1111");
+  t += (USER_CACHE_TTL_SECONDS - 1) * 1000; // 86 399s: still alive
+  assert.equal(await getCachedUserReportId(kv, "UC_aaa"), "rep1111");
+  t += 2_000; // 86 401s past the write: gone
+  assert.equal(await getCachedUserReportId(kv, "UC_aaa"), null);
+});
+
+test("user cache TTL constant is one day", () => {
+  assert.equal(USER_CACHE_TTL_SECONDS, 86_400);
 });
