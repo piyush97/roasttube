@@ -69,7 +69,13 @@ export default async function Image({
             Official verdict of the court of one
           </div>
         </div>
-        <div style={{ height: 5, borderTop: `4px double ${INK}` }} />
+        {/* workerd's CSS parser rejects the `double` border keyword in
+            ImageResponse (throws, blank card), so the classic double rule is
+            drawn as two solid bars. */}
+        <div style={{ display: "flex", flexDirection: "column", height: 6 }}>
+          <div style={{ height: 4, background: INK }} />
+          <div style={{ height: 1, background: INK, marginTop: 1 }} />
+        </div>
 
         <div
           style={{
