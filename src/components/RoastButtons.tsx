@@ -283,12 +283,15 @@ export function RoastButtons({
                 ? "Subpoenas flying…"
                 : "Roast my YouTube →"}
             </button>
-            <a
-              href="/api/auth/logout"
-              className="font-mono text-xs uppercase tracking-wide text-ink-soft underline"
-            >
-              Sign out
-            </a>
+            {/* Real form POST: sign-out is a state change (POST-only endpoint) and works without JS. */}
+            <form method="post" action="/api/auth/logout">
+              <button
+                type="submit"
+                className="font-mono text-xs uppercase tracking-wide text-ink-soft underline"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
         ) : (
           <div>

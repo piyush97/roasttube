@@ -42,7 +42,10 @@ export async function POST(req: NextRequest) {
   const startedAt = Date.now();
   const ip =
     req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    // XFF fallback: take the LAST element. On Cloudflare the edge overwrites/
+    // appends the real client IP at the end of the chain, so earlier entries
+    // are client-controlled spoofing bait; the last one is the one we saw.
+    req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ??
     "local";
   const kv = await getKv();
   if (await ipRateLimited(kv, ip, Date.now())) {
