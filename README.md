@@ -1,6 +1,6 @@
 <p align="center"><a href="brag-output/brag.mp4"><img src="brag-output/brag.jpg" alt="Watch the 21-second RoastTube launch video: a demo verdict with a Brain Rot Score of 29 and a Mildly Concerning stamp" width="960"></a></p>
 
-<p align="center"><a href="brag-output/brag.mp4">Watch the launch video — 21 seconds, 1080p, music + sound effects</a></p>
+<p align="center"><a href="brag-output/brag.mp4">Watch the launch video: 21 seconds, 1080p, music + sound effects</a></p>
 
 # RoastTube
 
@@ -139,7 +139,7 @@ After each good production deploy, note the newest version id from step 1. It is
 ## Tests
 
 ```bash
-npm test          # node --test, 90 tests
+npm test          # node --test, 96 tests
 npx tsc --noEmit  # types
 npm run lint      # eslint
 npm run build     # production build

@@ -181,7 +181,7 @@ async function runCli(model: string, body: Record<string, unknown>, ms: number):
       "cf",
       cliArgs,
       { timeout: ms, maxBuffer: 16 * 1024 * 1024 },
-      (err, stdout, stderr) => {
+      (err, stdout) => {
         const took = Date.now() - started;
         const out = String(stdout ?? "");
         if (err) {
@@ -258,9 +258,16 @@ const HAS_WORKERS_REST = Boolean(CF_ACCOUNT && CF_TOKEN);
 
 function workersAi(model: string): Candidate["call"] {
   return async (system, user, signal) => {
+    // --variant=jsonfmt appends the JSON contract and asks for JSON output;
+    // A1's findings live in docs/superpowers/notes/2026-10-17-launch-audits.md.
+    const sys = variant === "jsonfmt" ? system + JSON_CONTRACT : system;
     if (!HAS_WORKERS_REST) {
       // Fallback path: cached cloudflare CLI auth.
-      return runCli(model, { messages: [{ role: "system", content: system }, { role: "user", content: user }], max_tokens: 2000 }, PER_CALL_TIMEOUT_MS);
+      return runCli(model, {
+        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+        max_tokens: 2000,
+        ...(variant === "jsonfmt" ? { response_format: { type: "json_object" } } : {}),
+      }, PER_CALL_TIMEOUT_MS);
     }
     const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${model}`;
     const started = Date.now();
@@ -270,11 +277,12 @@ function workersAi(model: string): Candidate["call"] {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${CF_TOKEN}` },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: system },
+            { role: "system", content: sys },
             { role: "user", content: user },
           ],
           max_tokens: 6000,
           reasoning_effort: "low",
+          ...(variant === "jsonfmt" ? { response_format: { type: "json_object" } } : {}),
         }),
         signal,
       });

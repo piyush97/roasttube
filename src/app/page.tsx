@@ -28,7 +28,7 @@ export default async function Home({
     <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
       <header>
         <div className="flex items-baseline justify-between gap-4 border-b-4 border-[var(--ink)] pb-1">
-          <span className="dateline">Vol. I — No. 1</span>
+          <span className="dateline">Vol. I, No. 1</span>
           <span className="dateline">{today}</span>
           <span className="dateline hidden sm:inline">Price: your dignity</span>
         </div>
@@ -53,8 +53,8 @@ export default async function Home({
         <p className="mt-4 max-w-2xl text-lg leading-7">
           A court of one, jury of one, found you guilty on all counts of taste.
           RoastTube pulls what you{" "}
-          <em>chose to care about</em> — your liked videos, subscriptions and
-          playlists — computes a Brain Rot Score from hard numbers, then lets a
+          <em>chose to care about</em> (your liked videos, subscriptions and
+          playlists), computes a Brain Rot Score from hard numbers, then lets a
           model with no manners and perfect evidence explain you to yourself.
         </p>
         <p className="mt-4 max-w-2xl text-[0.95rem] italic leading-6 text-ink-soft">
@@ -92,7 +92,7 @@ export default async function Home({
       <footer className="mt-14">
         <div className="rule-thick" />
         <p className="dateline mt-3 text-center">
-          RoastTube — entertainment, barely. Roasts are stored so links keep
+          RoastTube: entertainment, barely. Roasts are stored so links keep
           working; sign-in tokens are dropped once the evidence is collected.
         </p>
         <p className="dateline mt-2 text-center">
