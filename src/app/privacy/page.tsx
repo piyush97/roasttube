@@ -131,7 +131,7 @@ export default function Privacy() {
           or channel IDs, your account identity, or raw API responses.
         </p>
         <p className="mt-4 max-w-2xl text-lg leading-7">
-          The model runs on Google's Gemini, on its paid tier, where Google
+          The model runs on Google&apos;s Gemini, on its paid tier, where Google
           does not use prompts or responses to train its models (Gemini API
           Terms of Service, Paid Services). A fallback model may run on
           Cloudflare Workers AI, where inputs and outputs are not retained and

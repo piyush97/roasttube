@@ -92,16 +92,23 @@ export function RoastStream({
 
   const paragraphs = text.split(/\n\s*\n|\s*\bParagraph\s+\d+\s*:\s*/i);
   const totalChars = paragraphs.reduce((n, p) => n + p.length, 0);
-  let budget = revealed;
+  // Slice paragraphs up front: mutating a counter inside the JSX map trips
+  // the react-compiler "reassign after render" rule and buys nothing.
+  const slices: string[] = [];
+  {
+    let budget = revealed;
+    for (const p of paragraphs) {
+      slices.push(budget === null ? p : p.slice(0, Math.max(0, budget)));
+      if (budget !== null) budget -= p.length;
+    }
+  }
 
   return (
     <div
       lang="en"
       className="hyphens-auto text-[1.06rem] leading-7 [&>p]:mb-4 [&>p:last-child]:mb-0"
     >
-      {paragraphs.map((p, i) => {
-        const slice = budget === null ? p : p.slice(0, Math.max(0, budget));
-        if (budget !== null) budget -= p.length;
+      {slices.map((slice, i) => {
         if (!slice) return null;
         return (
           <p

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- this is a one-off eval
+   harness: provider payload shapes vary per engine and are parsed defensively
+   here; the production path (src/lib/gemini.ts) types its responses. */
 // A1: LLM engine head-to-head evaluator.
 //
 // Builds the REAL roast prompt (src/lib/prompt.ts) for each demo persona

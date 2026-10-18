@@ -84,7 +84,7 @@ test("demo cache stores per persona and expires after an hour", async () => {
 });
 
 test("user cache round-trips and stays isolated per channel", async () => {
-  let t = 2_000_000;
+  const t = 2_000_000;
   const kv = new MapKv(() => t);
   assert.equal(await getCachedUserReportId(kv, "UC_aaa"), null);
   await cacheUserReportId(kv, "UC_aaa", "rep1111");
