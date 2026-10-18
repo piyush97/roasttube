@@ -44,6 +44,8 @@ const ERROR_FALLBACKS: Record<string, string> = {
     "YouTube did not hand over the evidence. Demand a retrial.",
   gemini_failed:
     "The roast engine is oversubscribed right now. Give it a minute and demand a retrial.",
+  quota_exhausted:
+    "Your back catalogue is bigger than the court's evidence budget. Come back tomorrow, or send a demo defendant to trial.",
   bad_request: "The docket did not make sense. Reload the page and file again.",
 };
 

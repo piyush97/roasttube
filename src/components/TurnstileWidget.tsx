@@ -50,6 +50,11 @@ const INTERACTIVE_TIMEOUT_MS = 60000;
 const RETRY_NOTICE =
   "The bot check did not issue a token. Send the defendant to trial again; the court will retry.";
 
+// The widget is interaction-only: when Turnstile decides it wants a click it
+// appears with no announcement, so say so and bring it into view.
+const INTERACTIVE_NOTICE =
+  "The court requires proof you're human. Confirm the check below to continue.";
+
 let scriptPromise: Promise<void> | null = null;
 
 // Loads the Turnstile script lazily on the first token request. A failed load
@@ -160,6 +165,7 @@ export function TurnstileWidget({
                 settle(null);
               },
               "before-interactive-callback": () => {
+                setNotice(INTERACTIVE_NOTICE);
                 armDeadline(INTERACTIVE_TIMEOUT_MS);
               },
             });
@@ -201,12 +207,22 @@ export function TurnstileWidget({
     };
   }, [settle]);
 
+  // Pull the bot check into view when it turns interactive; the other notice
+  // types (retry, timeout) can stay where they are.
+  const noticeRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (notice === INTERACTIVE_NOTICE) {
+      noticeRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [notice]);
+
   if (!siteKey) return null;
   return (
     <>
       <div ref={container} />
       {notice && (
         <p
+          ref={noticeRef}
           role="status"
           className="clipping mt-6 border-2 border-[var(--red)] p-4 text-[0.95rem]"
         >

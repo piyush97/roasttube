@@ -7,7 +7,9 @@ import { SESSION_COOKIE } from "@/lib/oauth";
 export async function POST() {
   const jar = await cookies();
   jar.delete({ name: SESSION_COOKIE, path: "/" });
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"));
+  // 303 so the browser follows with a GET: a 307 would re-POST to / and
+  // refreshing after that can prompt a form resubmission.
+  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"), 303);
 }
 
 export async function GET() {

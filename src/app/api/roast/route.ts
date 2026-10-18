@@ -148,8 +148,17 @@ export async function POST(req: NextRequest) {
       collected = await collect(youtubeToken!);
     } catch (e) {
       if (e instanceof QuotaError) {
+        // The internal message names unit budgets; keep it out of the response.
+        // (Logged code only; the full text stays in the worker's own error.)
         console.warn({ evt: "reject", code: "quota_exhausted", source: "youtube" });
-        return NextResponse.json({ error: "quota_exhausted", message: e.message }, { status: 429 });
+        return NextResponse.json(
+          {
+            error: "quota_exhausted",
+            message:
+              "Your back catalogue is bigger than the court's evidence budget. Come back tomorrow, or send a demo defendant to trial.",
+          },
+          { status: 429 }
+        );
       }
       const status = youtubeUpstreamStatus(e);
       if (status === 401) {
