@@ -177,7 +177,7 @@ async function runCli(model: string, body: Record<string, unknown>, ms: number):
   const started = Date.now();
   const cliArgs = ["ai", "run", model, "--body", JSON.stringify(body)];
   return await new Promise<CallResult>((resolve) => {
-    const child = execFile(
+    execFile(
       "cf",
       cliArgs,
       { timeout: ms, maxBuffer: 16 * 1024 * 1024 },
