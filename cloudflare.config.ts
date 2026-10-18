@@ -24,7 +24,7 @@ export default defineConfig({
       // time; the matching secret is uploaded only after that swap, so the
       // always-pass test secret can never ship.
       NEXT_PUBLIC_APP_URL: bindings.text("https://roasttube.piyushmehta.com"),
-      TURNSTILE_SITE_KEY: bindings.text("1x00000000000000000000AA"),
+      TURNSTILE_SITE_KEY: bindings.text("0x4AAAAAAFaPFiXm7R1WDAWg"),
       DAILY_ROAST_BUDGET: bindings.text("15"),
       // Declared secrets (validation + typing). Values are uploaded with
       // `cf workers secrets update` — see scripts/setup-cloudflare.sh.
