@@ -90,6 +90,30 @@ It walks through the login, writes `.dev.vars`, offers to register a Turnstile w
 
 Free-tier caveats: Workers allows 100k requests a day on the free plan; the demo cache holds each persona's roast for an hour so repeat visits cost nothing; the daily budget (`DAILY_ROAST_BUDGET`, 15) exists because the Gemini free tier caps requests per day.
 
+## Rollback
+
+Every deploy creates a Worker version. If a deploy misbehaves, pin the Worker back to the last known-good version:
+
+1. List recent versions and copy the id of the last good one (the dashboard equivalent is Workers & Pages > roasttube > Deployments):
+
+```bash
+cf workers versions list --worker-id roasttube
+```
+
+2. Re-deploy that version at 100%:
+
+```bash
+cf workers deployments create --worker roasttube --versions '[{"version_id":"<version-id>","percentage":100}]'
+```
+
+If the CLI refuses because a secret changed since that version, read the error first. `--bypass-deployment-checks` exists, but it bypasses exactly the check that stopped you.
+
+3. Rollbacks do not restore secrets. If the bad deploy shipped a bad secret, fix the value (re-run `./scripts/setup-cloudflare.sh`, or set it in the Cloudflare dashboard under Worker settings) and deploy again.
+
+4. Verify: `curl -sI https://<your-domain>/` answers as before.
+
+After each good production deploy, note the newest version id from step 1. It is the cheapest insurance this site has.
+
 ## Environment variables
 
 | Variable | Required | Purpose |
