@@ -12,9 +12,46 @@ const unusedFetch = fakeFetch(async () => {
   throw new Error("fetch must not be called");
 });
 
+// Restore NODE_ENV around a block so prod-behavior tests don't leak into others.
+// Next's ProcessEnv types mark NODE_ENV readonly; node --test still lets us swap it.
+function setNodeEnv(value: string | undefined) {
+  const env = process.env as Record<string, string | undefined>;
+  if (value === undefined) delete env.NODE_ENV;
+  else env.NODE_ENV = value;
+}
+
+async function withNodeEnv<T>(env: string | undefined, fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.NODE_ENV;
+  setNodeEnv(env);
+  try {
+    return await fn();
+  } finally {
+    setNodeEnv(prev);
+  }
+}
+
 test("verification is skipped when no secret is configured", async () => {
-  assert.equal(await verifyTurnstile({ secret: undefined, token: undefined, fetchFn: unusedFetch }), true);
-  assert.equal(await verifyTurnstile({ secret: "", token: undefined, fetchFn: unusedFetch }), true);
+  await withNodeEnv(undefined, async () => {
+    assert.equal(await verifyTurnstile({ secret: undefined, token: undefined, fetchFn: unusedFetch }), true);
+    assert.equal(await verifyTurnstile({ secret: "", token: undefined, fetchFn: unusedFetch }), true);
+  });
+});
+
+test("missing secret fails closed in production and logs an error", async () => {
+  await withNodeEnv("production", async () => {
+    const errors: unknown[][] = [];
+    const prevError = console.error;
+    console.error = (...args: unknown[]) => {
+      errors.push(args);
+    };
+    try {
+      assert.equal(await verifyTurnstile({ secret: undefined, token: "tok", fetchFn: unusedFetch }), false);
+      assert.equal(await verifyTurnstile({ secret: "", token: "tok", fetchFn: unusedFetch }), false);
+    } finally {
+      console.error = prevError;
+    }
+    assert.ok(errors.length >= 2, "each fail-closed check must log an error");
+  });
 });
 
 test("a configured secret with a missing token fails without a network call", async () => {

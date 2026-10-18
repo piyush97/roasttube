@@ -8,7 +8,15 @@ export async function verifyTurnstile(opts: {
   remoteIp?: string;
   fetchFn?: typeof fetch;
 }): Promise<boolean> {
-  if (!opts.secret) return true;
+  if (!opts.secret) {
+    // Fail closed: in production a missing secret must not silently disable
+    // bot checks. Local dev and tests keep the skip so the demo works keyless.
+    if (process.env.NODE_ENV === "production") {
+      console.error("turnstile: secret is not configured in production; failing closed");
+      return false;
+    }
+    return true;
+  }
   if (!opts.token) return false;
   const body = new URLSearchParams({ secret: opts.secret, response: opts.token });
   if (opts.remoteIp) body.set("remoteip", opts.remoteIp);

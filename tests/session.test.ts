@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { openSession, sealSession } from "../src/lib/oauth.ts";
+import { cookieSecure, openSession, sealSession } from "../src/lib/oauth.ts";
 
 async function withSecret<T>(secret: string | undefined, fn: () => Promise<T>): Promise<T> {
   const prev = process.env.SESSION_SECRET;
@@ -64,6 +64,50 @@ test("dev fallback works when SESSION_SECRET is unset", async () => {
     const sealed = await sealSession(session);
     assert.deepEqual(await openSession(sealed), session);
   });
+});
+
+// Restore NODE_ENV around a block so prod-behavior tests don't leak into others.
+// Next's ProcessEnv types mark NODE_ENV readonly; node --test still lets us swap it.
+function setNodeEnv(value: string | undefined) {
+  const env = process.env as Record<string, string | undefined>;
+  if (value === undefined) delete env.NODE_ENV;
+  else env.NODE_ENV = value;
+}
+
+async function withNodeEnv<T>(env: string | undefined, fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.NODE_ENV;
+  setNodeEnv(env);
+  try {
+    return await fn();
+  } finally {
+    setNodeEnv(prev);
+  }
+}
+
+test("SESSION_SECRET unset fails closed in production", async () => {
+  await withSecret(undefined, async () => {
+    await withNodeEnv("production", async () => {
+      await assert.rejects(() => sealSession({ token: "t", expiresAt: Date.now() + 60_000 }));
+      await assert.rejects(() => openSession("whatever-value"));
+    });
+  });
+});
+
+test("cookie is Secure when the app URL is https even outside production", async () => {
+  const prevUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const prevRt = process.env.RT_COOKIES;
+  delete process.env.RT_COOKIES;
+  process.env.NEXT_PUBLIC_APP_URL = "https://roasttube.piyushmehta.com";
+  try {
+    await withNodeEnv("development", async () => {
+      assert.equal(cookieSecure(), true);
+    });
+  } finally {
+    if (prevUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+    else process.env.NEXT_PUBLIC_APP_URL = prevUrl;
+    if (prevRt === undefined) delete process.env.RT_COOKIES;
+    else process.env.RT_COOKIES = prevRt;
+  }
 });
 
 test("sealed cookie stays comfortably under the 4KB cookie budget", async () => {

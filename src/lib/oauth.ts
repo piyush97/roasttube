@@ -11,7 +11,11 @@ export const REDIRECT_PATH = "/api/auth/callback/google";
 // Plan: RT_COOKIES=true forces Secure cookies on localhost (browsers treat
 // localhost as a secure context), to exercise the production cookie path.
 export function cookieSecure(): boolean {
-  return process.env.RT_COOKIES === "true" || process.env.NODE_ENV === "production";
+  return (
+    process.env.RT_COOKIES === "true" ||
+    process.env.NODE_ENV === "production" ||
+    (process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") ?? false)
+  );
 }
 
 export function isOAuthConfigured(): boolean {
@@ -113,6 +117,12 @@ function fromBase64url(value: string): Uint8Array<ArrayBuffer> | null {
 let cachedKey: { secret: string; key: CryptoKey } | null = null;
 
 async function sessionKey(): Promise<CryptoKey> {
+  // Fail closed in production: a missing SESSION_SECRET must not silently
+  // mint per-process dev secrets (sessions would drop on restart and differ
+  // across isolates). Checked before the cache so it throws every time.
+  if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
   const secret = process.env.SESSION_SECRET ?? fallbackSecret();
   if (cachedKey && cachedKey.secret === secret) return cachedKey.key;
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(secret));
@@ -141,6 +151,11 @@ export async function sealSession(session: Session): Promise<string> {
 
 export async function openSession(value: string): Promise<Session | null> {
   if (!value) return null;
+  // Same fail-closed rule as sealSession, checked before parsing so it is
+  // never swallowed by the decrypt catch below.
+  if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
   const raw = fromBase64url(value);
   if (!raw || raw.length <= 12) return null;
   try {
