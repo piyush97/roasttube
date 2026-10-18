@@ -25,6 +25,22 @@ export const metadata: Metadata = {
   title: "RoastTube: Your YouTube Taste, On The Record",
   description:
     "We read your likes. We did the math. A court of one jury of one found you guilty.",
+  // The image comes from app/opengraph-image.tsx, which Next wires into
+  // og:image for every route that does not override it (reports do).
+  openGraph: {
+    type: "website",
+    siteName: "RoastTube",
+    title: "RoastTube: Your YouTube Taste, On The Record",
+    description:
+      "We read your likes. We did the math. A court of one jury of one found you guilty.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RoastTube: Your YouTube Taste, On The Record",
+    description:
+      "We read your likes. We did the math. A court of one jury of one found you guilty.",
+  },
 };
 
 export default function RootLayout({
