@@ -14,6 +14,7 @@ import {
   getCachedDemoReportId,
   ipRateLimited,
   RATE_LIMIT_PER_HOUR,
+  refundBudget,
 } from "@/lib/limits";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { SESSION_COOKIE, openSession } from "@/lib/oauth";
@@ -36,7 +37,7 @@ function geminiUpstreamStatus(e: unknown): number | null {
 
 // Admission order: rate limit → parse → (demo: Turnstile → cache) →
 // (youtube: session) → daily budget → collect → generate. Cache hits are free;
-// admitted-but-failed generations keep their budget unit (soft limit).
+// collect/generate failures refund their budget unit (soft limit).
 // Rejection/success logs are structured and carry no PII: no titles, ids,
 // IPs, tokens, or upstream response text.
 export async function POST(req: NextRequest) {
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest) {
     try {
       collected = await collect(youtubeToken!);
     } catch (e) {
+      await refundBudget(kv, Date.now());
       if (e instanceof QuotaError) {
         // The internal message names unit budgets; keep it out of the response.
         // (Logged code only; the full text stays in the worker's own error.)
@@ -203,6 +205,7 @@ export async function POST(req: NextRequest) {
   try {
     report = await roast(signals, score);
   } catch (e) {
+    await refundBudget(kv, Date.now());
     const status = geminiUpstreamStatus(e);
     console.warn({
       evt: "reject",

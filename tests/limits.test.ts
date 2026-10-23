@@ -12,6 +12,7 @@ import {
   getCachedDemoReportId,
   getCachedUserReportId,
   ipRateLimited,
+  refundBudget,
 } from "../src/lib/limits.ts";
 
 test(`rate limit allows ${RATE_LIMIT_PER_HOUR} per hour then rejects`, async () => {
@@ -104,4 +105,17 @@ test("user cache expires at the 86400s boundary, not before", async () => {
 
 test("user cache TTL constant is one day", () => {
   assert.equal(USER_CACHE_TTL_SECONDS, 86_400);
+});
+
+test("refundBudget returns a unit and never goes below zero", async () => {
+  const kv = new MapKv();
+  const t = Date.UTC(2026, 9, 17, 12, 0, 0);
+  assert.equal(await consumeBudget(kv, t, 1), true);
+  assert.equal(await consumeBudget(kv, t, 1), false);
+  await refundBudget(kv, t);
+  assert.equal(await consumeBudget(kv, t, 1), true);
+  await refundBudget(kv, t);
+  await refundBudget(kv, t);
+  assert.equal(await consumeBudget(kv, t, 1), true);
+  assert.equal(await consumeBudget(kv, t, 1), false);
 });

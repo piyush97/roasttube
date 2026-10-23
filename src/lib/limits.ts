@@ -62,6 +62,15 @@ export async function consumeBudget(kv: KvLike, now: number, cap: number): Promi
   return true;
 }
 
+// Give back one unit when an admitted request failed before producing a
+// roast, so an upstream outage cannot drain the day's budget for nothing.
+export async function refundBudget(kv: KvLike, now: number): Promise<void> {
+  const key = `budget:${new Date(now).toISOString().slice(0, 10)}`;
+  const used = Number(await kv.get(key));
+  if (!Number.isFinite(used) || used <= 0) return;
+  await kv.put(key, String(used - 1), { expirationTtl: 2 * DAY_SECONDS });
+}
+
 export async function getCachedDemoReportId(
   kv: KvLike,
   persona: string
