@@ -13,6 +13,7 @@ import {
   dailyBudgetCap,
   getCachedDemoReportId,
   ipRateLimited,
+  RATE_LIMIT_PER_HOUR,
 } from "@/lib/limits";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { SESSION_COOKIE, openSession } from "@/lib/oauth";
@@ -52,14 +53,15 @@ export async function POST(req: NextRequest) {
     // Pre-parse by design, so the source is not known at this point.
     console.warn({ evt: "reject", code: "rate_limited", source: "unknown" });
     return NextResponse.json(
-      { error: "rate_limited", message: "3 roasts per hour. Breathe. Try again later." },
+      { error: "rate_limited", message: `${RATE_LIMIT_PER_HOUR} roasts per hour. Breathe. Try again later.` },
       { status: 429 }
     );
   }
 
   let body: { source?: string; persona?: string; turnstileToken?: string };
   try {
-    body = await req.json();
+    // JSON `null` parses fine; coalesce so body.source can't throw a 500.
+    body = (await req.json()) ?? {};
   } catch {
     return NextResponse.json({ error: "bad_json" }, { status: 400 });
   }
@@ -220,7 +222,12 @@ export async function POST(req: NextRequest) {
 
   const id = await saveReport(report, signals, score, source, persona);
   if (source === "demo" && persona) {
-    await cacheDemoReportId(kv, persona, id);
+    // Best-effort: the report is already saved, a cache write must not 500 it.
+    try {
+      await cacheDemoReportId(kv, persona, id);
+    } catch {
+      console.warn({ evt: "cache_write_failed", source });
+    }
   }
   console.log({ evt: "roast", source, outcome: "ok", ms: Date.now() - startedAt });
   return NextResponse.json({ id, report, signals, score, persona });
