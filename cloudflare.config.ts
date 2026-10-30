@@ -26,6 +26,10 @@ export default defineConfig({
       NEXT_PUBLIC_APP_URL: bindings.text("https://roasttube.piyushmehta.com"),
       TURNSTILE_SITE_KEY: bindings.text("0x4AAAAAAFaPFiXm7R1WDAWg"),
       DAILY_ROAST_BUDGET: bindings.text("15"),
+      // Cloudflare Web Analytics beacon token (dashboard: Web Analytics -> the
+      // roasttube site -> JS snippet). Public, ships in the HTML. Empty means
+      // the beacon is not rendered, so local and preview runs stay silent.
+      NEXT_PUBLIC_CF_BEACON_TOKEN: bindings.text("28b2d23dc175448aa85c34a20783cb3e"),
       // Declared secrets (validation + typing). Values are uploaded with
       // `cf workers secrets update` — see scripts/setup-cloudflare.sh.
       GEMINI_API_KEY: bindings.secret(),

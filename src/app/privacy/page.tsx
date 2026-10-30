@@ -71,14 +71,17 @@ export default function Privacy() {
           cookies are set: <strong>rt_session</strong>, sealed and HttpOnly,
           which expires within 1 hour, and <strong>rt_oauth</strong>, which
           expires in 10 minutes and is scoped to the /api/auth path. There are
-          no advertising or tracking cookies.
+          no advertising or tracking cookies. Page views are counted in
+          aggregate by Cloudflare Web Analytics, which sets no cookies and does
+          not follow you across sites.
         </p>
 
         <h2 className="headline mt-10 text-3xl sm:text-5xl">HOW WE USE IT</h2>
         <p className="mt-4 max-w-2xl text-lg leading-7">
           Solely to produce your roast, store it so its link keeps working,
-          and stop abuse of the service. There is no advertising, no
-          profiling, and no analytics.
+          and stop abuse of the service. There is no advertising and no
+          profiling, and the only measurement is the cookieless page-view
+          count described above.
         </p>
 
         <h2 className="headline mt-10 text-3xl sm:text-5xl">

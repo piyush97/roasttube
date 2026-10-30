@@ -48,12 +48,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Cookieless page-view counts. The token is public (it only names the site);
+  // unset in local dev, so nothing loads and no requests leave the machine.
+  const beaconToken = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN;
+
   return (
     <html
       lang="en"
       className={`${anton.variable} ${sourceSerif.variable} ${geistMono.variable}`}
     >
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        {beaconToken ? (
+          // defer exists only to satisfy next/no-sync-scripts; module scripts
+          // are deferred anyway, and the beacon must not block rendering.
+          <script
+            type="module"
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={JSON.stringify({ token: beaconToken })}
+          />
+        ) : null}
+      </body>
     </html>
   );
 }
