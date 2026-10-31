@@ -126,6 +126,7 @@ After each good production deploy, note the newest version id from step 1. It is
 | `SESSION_SECRET` | hosted | Seals the session cookie. The Cloudflare wizard generates one. |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | hosted | Cloudflare Turnstile keys for the demo button. Localhost uses the always-pass test pair. Dual-file drift: the wizard writes the pair to `.dev.vars` only, which is what `vinext dev` reads; `next dev` reads `.env.local`, so there the widget is absent and the server skips verification. |
 | `DAILY_ROAST_BUDGET` | no | Roasts per day cap in production, 15 by default. |
+| `NEXT_PUBLIC_CF_BEACON_TOKEN` | no | Cloudflare Web Analytics token. Unset means no beacon and no page-view counts. |
 
 ## How it works
 

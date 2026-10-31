@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 /** Pull a real font stack out of a next/font CSS variable, generics included. */
 function cssFontStack(variable: string, fallbacks: string[]): string[] {
@@ -62,16 +62,50 @@ export function ShareCard({
   const [downloadState, setDownloadState] = useState<
     "idle" | "busy" | "done" | "fail"
   >("idle");
+  const [shared, setShared] = useState<"idle" | "fail">("idle");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const url = typeof window !== "undefined"
-    ? `${window.location.origin}/report/${id}`
-    : `/report/${id}`;
+  // Absolute URL for the share links: env default on the server, the real
+  // origin after hydration. useSyncExternalStore avoids a setState-in-effect
+  // and the hydration mismatch that a bare window read would cause.
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () =>
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+      "https://roasttube.piyushmehta.com"
+  );
+
+  const url = `${origin}/report/${id}`;
+  const shareText = `${line} Brain Rot Score ${score}/100, ${tier}.`;
+  const xHref = `https://x.com/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`;
+  const waHref = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${url}`)}`;
+
+  async function share() {
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "RoastTube verdict", text: shareText, url });
+        return;
+      } catch (err) {
+        // User dismissed the sheet: leave the buttons alone.
+        if ((err as DOMException | undefined)?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${url}`);
+      setCopied("ok");
+      setShared("idle");
+    } catch {
+      setShared("fail");
+    }
+    setTimeout(() => setCopied("idle"), 2000);
+  }
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(`${line}\n${url}`);
       setCopied("ok");
+      setShared("idle");
     } catch {
       setCopied("fail");
     }
@@ -190,6 +224,12 @@ export function ShareCard({
       <p className="mt-2 text-[1.02rem] leading-6 italic">{line}</p>
       <div className="mt-5 flex flex-wrap gap-3">
         <button
+          onClick={share}
+          className="bg-[var(--red)] px-5 py-2.5 font-display text-lg text-[var(--paper)] transition-colors hover:bg-[var(--ink)]"
+        >
+          {shared === "fail" ? "Share failed. Copy instead" : "Share verdict"}
+        </button>
+        <button
           onClick={copy}
           className="bg-[var(--ink)] px-5 py-2.5 font-display text-lg text-[var(--paper)] transition-colors hover:bg-[var(--red)] disabled:bg-[var(--ink-soft)]"
           disabled={copied === "ok"}
@@ -210,6 +250,26 @@ export function ShareCard({
                 : "Download evidence (PNG)"}
         </button>
       </div>
+      <p className="mt-4 text-[0.95rem]">
+        Or post it yourself:{" "}
+        <a
+          href={xHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-1 underline-offset-2 hover:text-[var(--red)]"
+        >
+          X
+        </a>
+        {" / "}
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-1 underline-offset-2 hover:text-[var(--red)]"
+        >
+          WhatsApp
+        </a>
+      </p>
       <canvas ref={canvasRef} className="hidden" aria-hidden />
     </div>
   );
